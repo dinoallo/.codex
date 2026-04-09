@@ -1,0 +1,32 @@
+# Track only user-maintained Codex configuration by default.
+*
+
+!.gitignore
+!AGENTS.md
+!prompts/
+!prompts/**
+!skills/
+!skills/**
+
+# Ignore bundled/system skills shipped with Codex itself.
+skills/.system/
+
+# Ignore local auth, state, logs, caches, and session data.
+.personality_migration
+.tmp/
+auth.json
+config.toml
+history.jsonl
+log/
+logs_*.sqlite
+logs_*.sqlite-*
+memories/
+sessions/
+shell_snapshots/
+state_*.sqlite
+state_*.sqlite-*
+tmp/
+version.json
+
+# Optional: keep sanitized examples if you add them later.
+!*.example.toml
