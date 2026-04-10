@@ -1,0 +1,4 @@
+interface:
+  display_name: "Write GitHub Actions Workflows"
+  short_description: "Draft GitHub Actions workflow YAML"
+  default_prompt: "Use $write-github-actions-workflows to create or revise a GitHub Actions workflow in .github/workflows."
