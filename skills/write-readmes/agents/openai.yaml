@@ -1,0 +1,4 @@
+interface:
+  display_name: "Write READMEs"
+  short_description: "Draft README and synced i18n variants"
+  default_prompt: "Use $write-readmes to create or update README.md and keep translated README variants synchronized."
