@@ -27,6 +27,12 @@ Create or revise repository README files with synchronized translations. For new
 - Preserve existing links, badges, and anchors unless the change requires updating them.
 - Reuse repository terminology instead of inventing new names for features, commands, or modules.
 
+## Protect Privacy
+
+- Do not expose the operator's current working directory, absolute local filesystem paths, username, hostname, email address, or other identifiable local environment details in README content.
+- When examples need a path or machine-specific value, replace it with repository-relative paths or neutral placeholders such as `$PROJECT_ROOT`, `$HOME`, `/path/to/project`, `example.com`, or `your-name`.
+- Apply the same sanitization rule to translated README variants, screenshots, copied terminal snippets, and generated examples.
+
 ## Synchronize Translations
 
 - If the user writes in a non-English language X, ensure there is also a README variant in language X.
