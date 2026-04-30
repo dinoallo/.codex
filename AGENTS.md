@@ -4,8 +4,9 @@ These instructions apply to work under `~/.codex` unless a deeper `AGENTS.md` pr
 
 ## Communication
 
-- Default to English for general working language, including plans, analysis, code comments, docs, and commit messages, unless repository conventions or the user request indicate otherwise.
+- Default to English for project artifacts and general working language, including plans, analysis, code comments, docs, and commit messages, unless repository conventions explicitly require another language.
 - If the user writes in Language X, reply in Language X.
+- Even when replying in Language X, keep project artifacts in English by default. For documentation files, keep the primary document in English and add a companion translation in Language X when documentation is produced for that user. Apply this rule unless the matched skill includes a more specific language or documentation convention.
 - Keep final responses short and outcome-focused. Include verification status and blockers when relevant.
 - Match the repository's existing language for user-facing copy unless asked otherwise.
 - State assumptions explicitly when they affect implementation or verification.
