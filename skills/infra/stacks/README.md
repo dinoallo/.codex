@@ -24,7 +24,7 @@ cd stacks/<fleet-name>
 
 ## Proxmox Permissions
 
-For the default native cloud-init mode on Proxmox VE 9 and newer, the stack needs 17 Proxmox VE privileges when the Telmate provider preflight check is aligned with this module's actual API usage:
+For the default native cloud-init mode on Proxmox VE 9 and newer, the stack needs 17 Proxmox VE privileges:
 
 - VM scope, usually `/vms` with propagation because the source template and target VMIDs are environment-specific:
   `VM.Allocate`, `VM.Audit`, `VM.Clone`, `VM.Config.CDROM`, `VM.Config.Cloudinit`, `VM.Config.CPU`, `VM.Config.Disk`, `VM.Config.HWType`, `VM.Config.Memory`, `VM.Config.Network`, `VM.Config.Options`, `VM.PowerMgmt`, `VM.GuestAgent.Audit`
@@ -37,7 +37,7 @@ For the default native cloud-init mode on Proxmox VE 9 and newer, the stack need
 
 On Proxmox VE 8 and older, replace `VM.GuestAgent.Audit` with `VM.Monitor` for guest-agent IP discovery. The count stays 17.
 
-Telmate provider `3.0.2-rc04` performs a provider-wide minimum permission check by default. Its built-in list is broader than this module and checks privileges such as pool allocation, console access, system modification, and VM migration. To keep the stack least-privilege, set `pm_minimum_permission_list` in the stack provider block before applying with a restricted user:
+Telmate provider `3.0.2-rc04` performs a provider-wide minimum permission check by default. Its built-in list is broader than this module and checks privileges such as pool allocation, console access, system modification, and VM migration. The bundled stack disables that preflight check so Proxmox ACLs remain the source of enforcement:
 
 ```hcl
 provider "proxmox" {
@@ -47,29 +47,9 @@ provider "proxmox" {
   pm_api_token_secret = var.pm_api_token_secret
   pm_tls_insecure     = var.pm_tls_insecure
 
-  pm_minimum_permission_list = [
-    "VM.Allocate",
-    "VM.Audit",
-    "VM.Clone",
-    "VM.Config.CDROM",
-    "VM.Config.Cloudinit",
-    "VM.Config.CPU",
-    "VM.Config.Disk",
-    "VM.Config.HWType",
-    "VM.Config.Memory",
-    "VM.Config.Network",
-    "VM.Config.Options",
-    "VM.PowerMgmt",
-    "VM.GuestAgent.Audit",
-    "Datastore.Audit",
-    "Datastore.AllocateSpace",
-    "Sys.Audit",
-    "SDN.Use",
-  ]
+  pm_minimum_permission_check = false
 }
 ```
-
-For Proxmox VE 8 and older, use `VM.Monitor` instead of `VM.GuestAgent.Audit` in the provider preflight list as well.
 
 Example role split:
 
