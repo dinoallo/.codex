@@ -1,0 +1,24 @@
+pm_api_url = "https://proxmox.example.com:8006/api2/json"
+# Recommended: create an API token in Proxmox: user@realm!tokenid
+pm_api_token_id     = "terraform-prov@pve!terraform-token"
+pm_api_token_secret = "replace-me"
+pm_tls_insecure     = true
+
+pm_node             = "pve3"
+pm_storage          = "local-lvm"
+cloud_init_delivery = "native"
+cloud_init_user     = "root"
+
+# Only used when cloud_init_delivery = "snippet".
+pm_snippets_storage = "pve3-cloud-init"
+vm_template         = "tf-ubuntu-template-3"
+
+vm_name_prefix      = "example"
+vm_master_count     = 1
+vm_worker_count     = 0
+vm_memory_mb        = 4096
+vm_cores            = 2
+vm_disk_gb          = 0
+
+# Keep default unless you need a custom output location.
+artifacts_dir       = ".artifacts"

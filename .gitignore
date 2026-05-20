@@ -13,6 +13,17 @@
 # Ignore bundled/system skills shipped with Codex itself.
 skills/.system/
 
+# Ignore local infrastructure helper state and generated Proxmox stack outputs.
+skills/infra/.tools/
+skills/infra/.venv/
+skills/infra/**/.artifacts/
+skills/infra/**/.terraform/
+skills/infra/**/terraform.tfstate
+skills/infra/**/terraform.tfstate.*
+skills/infra/**/tf.vars
+skills/infra/**/*.tfvars
+skills/infra/**/*.tfvars.json
+
 # Ignore local auth, state, logs, caches, and session data.
 .personality_migration
 .tmp/

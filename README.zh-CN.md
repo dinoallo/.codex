@@ -18,7 +18,7 @@ Codex Control Deck 是我的个人 `.codex` dotfiles 仓库：这里放着手工
 | --- | --- |
 | `AGENTS.md` | Codex 配置树下 agent 的个人全局工作规则。 |
 | `prompts/` | 自定义 prompt 文件，目前主要服务于 OPSX/OpenSpec 变更工作流。 |
-| `skills/` | 用户维护的 skills，用于扩展 Git、README 编写和 GitHub Actions 等行为。 |
+| `skills/` | 用户维护的 skills，用于扩展 Git、README 编写、GitHub Actions 和 Proxmox 基础设施等行为。 |
 | `.gitignore` | allowlist 风格的忽略规则，用来避免运行时状态和私有配置进入提交。 |
 
 ## 终端地图
@@ -32,6 +32,7 @@ Codex Control Deck 是我的个人 `.codex` dotfiles 仓库：这里放着手工
 |   `-- opsx-*.md
 |-- skills/
 |   |-- git-workflow-as-user/
+|   |-- infra/
 |   |-- write-github-actions-workflows/
 |   `-- write-readmes/
 `-- .gitignore
@@ -43,6 +44,7 @@ Codex Control Deck 是我的个人 `.codex` dotfiles 仓库：这里放着手工
 - 项目产物默认使用英文；需要时同步添加本地化文档。
 - 不要提交 `auth.json`、`config.toml`、会话日志、memories、shell snapshots、缓存或生成的运行时状态。
 - prompt 和 skill 优先做小范围定向修改；只有行为契约真的变化时才做大规模重写。
+- infra skill 的 stack 密钥和生成产物应保留在已忽略的文件中，例如 `tf.vars`、`.terraform/`、`.artifacts/` 和 Terraform state。
 - 新增需要长期维护的区域时，先更新 `.gitignore`，确保目标文件可跟踪，同时私有文件仍被忽略。
 
 ## 快速检查

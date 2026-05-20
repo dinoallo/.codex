@@ -18,7 +18,7 @@ Codex Control Deck is my personal `.codex` dotfiles repo: the hand-tuned layer o
 | --- | --- |
 | `AGENTS.md` | Personal global working rules for agents operating under the Codex config tree. |
 | `prompts/` | Custom prompt files, currently focused on the OPSX/OpenSpec change workflow. |
-| `skills/` | User-maintained skills that extend agent behavior for Git, README writing, and GitHub Actions. |
+| `skills/` | User-maintained skills that extend agent behavior for Git, README writing, GitHub Actions, and Proxmox infrastructure workflows. |
 | `.gitignore` | Allowlist-style ignore rules that keep runtime state and private config out of commits. |
 
 ## Console Map
@@ -32,6 +32,7 @@ Codex Control Deck is my personal `.codex` dotfiles repo: the hand-tuned layer o
 |   `-- opsx-*.md
 |-- skills/
 |   |-- git-workflow-as-user/
+|   |-- infra/
 |   |-- write-github-actions-workflows/
 |   `-- write-readmes/
 `-- .gitignore
@@ -43,6 +44,7 @@ Codex Control Deck is my personal `.codex` dotfiles repo: the hand-tuned layer o
 - Keep project artifacts in English by default; add localized companion docs when useful.
 - Do not commit `auth.json`, `config.toml`, session logs, memories, shell snapshots, caches, or generated runtime state.
 - Prefer targeted edits to prompts and skills. Avoid broad rewrites unless the behavior contract is changing.
+- Keep infra skill stack secrets and generated artifacts in ignored files such as `tf.vars`, `.terraform/`, `.artifacts/`, and Terraform state.
 - When adding a new maintained area, update `.gitignore` first so the intended files are trackable and the private files stay ignored.
 
 ## Quick Checks
