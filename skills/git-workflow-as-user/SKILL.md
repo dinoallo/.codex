@@ -1,0 +1,162 @@
+---
+name: git-workflow-as-user
+description: Perform Git workflows using the repository owner's identity and signing configuration. Use when Codex is asked to inspect status, stage files, commit, write commit messages, amend, tag, rebase, merge, push, open or update PR-ready history, verify signatures, troubleshoot signed commits, or otherwise operate Git on behalf of the user while preserving their author, committer, signing key, remotes, branches, and unrelated work.
+---
+
+# Git Workflow as User
+
+## Overview
+
+Operate Git as the user, not as the assistant. Preserve the user's local configuration, stage only the intended changes, use their existing signing setup for commits and tags, and verify the result before reporting success.
+
+## Start Every Workflow
+
+1. Read the nearest `AGENTS.md`, repository README, and project manifest when the Git operation depends on repo conventions.
+2. Inspect the repository state before editing or committing:
+   - `git status --short --branch`
+   - `git diff --stat`
+   - `git diff`
+   - `git diff --cached`
+3. Identify unrelated dirty files and leave them untouched unless the user explicitly includes them.
+4. Inspect local identity and signing configuration without changing it:
+   - `git config --show-origin --get user.name`
+   - `git config --show-origin --get user.email`
+   - `git config --show-origin --get commit.gpgsign`
+   - `git config --show-origin --get user.signingkey`
+   - `git config --show-origin --get gpg.format`
+   - `git config --show-origin --get tag.gpgsign`
+5. Treat missing identity or signing configuration as a blocker for signed user commits. Ask the user how to proceed instead of inventing identity values or generating keys.
+
+## Identity Rules
+
+- Use the repository's effective `user.name`, `user.email`, `user.signingkey`, `gpg.format`, and signing-related hooks exactly as configured.
+- Prefer repository-local config over global config when both exist because that is what Git will use.
+- Do not set or rewrite `user.name`, `user.email`, `user.signingkey`, `commit.gpgsign`, `gpg.program`, `SSH_AUTH_SOCK`, `GPG_TTY`, or global Git config unless the user explicitly asks.
+- Do not add `--author`, `--committer`, or environment variables such as `GIT_AUTHOR_*` or `GIT_COMMITTER_*` unless the user explicitly requests a different author.
+- Do not use assistant, bot, noreply, placeholder, or guessed identity values.
+
+## Staging
+
+- Prefer pathspec-specific staging over broad staging. Use `git add -- <paths>` for complete files and `git add -p -- <paths>` when only part of a file belongs in the commit.
+- Review the staged diff with `git diff --cached` before committing.
+- Keep generated files, lockfiles, and docs in the same commit only when they are part of the requested change or repository workflow.
+- Never stage unrelated user changes as a convenience.
+
+## Commit Message Convention
+
+Use the repository's documented commit message convention when one exists. If no stricter local convention exists, use Conventional Commits in English.
+
+Preferred subject format:
+
+```text
+<type>(<scope>): <summary>
+```
+
+Scope is optional when it does not add clarity:
+
+```text
+<type>: <summary>
+```
+
+Rules:
+
+- `type` must be lowercase ASCII. Use `feat`, `fix`, `docs`, not `Feat`, `Fix`, or `DOCS`.
+- Keep the summary in imperative mood, concise, and without a trailing period. Aim for 72 characters or fewer.
+- Commit only one coherent change per commit. Do not bundle unrelated refactors, formatting churn, and behavior changes together unless the user explicitly asks for one combined commit.
+- Add a body when the reason, tradeoff, migration, or risk is not obvious from the diff.
+- Use a breaking-change marker when applicable: `<type>(<scope>)!: <summary>` and include `BREAKING CHANGE:` in the body if needed.
+
+Preferred types:
+
+- `feat`: new user-facing or developer-facing capability
+- `fix`: bug fix or regression fix
+- `refactor`: internal restructuring without behavior change
+- `docs`: documentation-only change
+- `test`: test-only change
+- `perf`: measurable performance improvement
+- `build`: build, packaging, or dependency pipeline change
+- `ci`: CI workflow or automation change
+- `chore`: maintenance work that does not fit the categories above
+
+Example subjects:
+
+- `feat(auth): add token refresh on expiry`
+- `fix(api): handle empty pagination cursor`
+- `docs(readme): clarify local setup steps`
+- `refactor(cli): split flag parsing from command execution`
+
+## Signed Commits
+
+Use the user's existing signing setup. The normal path is:
+
+```bash
+git commit -S -m "type(scope): summary"
+```
+
+When repository config already has `commit.gpgsign=true`, `git commit -m ...` should still sign, but prefer `-S` when the user specifically requested a signed commit.
+
+Before committing:
+
+1. Confirm the staged diff is exactly the intended content.
+2. Choose the subject and body using the commit message convention above.
+3. Avoid creating a commit if verification or tests that should gate the change have not run, unless the user asks to commit anyway and the final response calls out the skipped checks.
+
+After committing:
+
+1. Verify the signature:
+   - `git log -1 --show-signature --format=fuller`
+   - If available, `git verify-commit HEAD`
+2. Inspect the final commit contents:
+   - `git show --stat --oneline --decorate --no-renames HEAD`
+   - Use `git show --name-status --format=fuller HEAD` when author, committer, or file list matters.
+3. Report the commit hash, subject, signature verification status, and tests/checks run.
+
+## Signed Tags
+
+Use signed tags only when the user asks for a tag or release marker:
+
+```bash
+git tag -s <tag-name> -m "<tag message>"
+git verify-tag <tag-name>
+```
+
+Do not create, move, or delete tags without explicit user intent.
+
+## Amend, Rebase, Merge, and History Changes
+
+- Treat amend, rebase, squash, reset, force-push, and tag movement as history changes that require explicit user intent.
+- Before amending or rebasing, inspect `git status --short --branch` and the relevant recent history with `git log --oneline --decorate -n 10`.
+- Preserve signing when amending: `git commit --amend -S`.
+- Preserve signing during interactive or automated rebases when the user asked for signed rewritten commits, for example with `git rebase --exec 'git commit --amend --no-edit -S'` only after confirming the workflow is appropriate.
+- Do not run destructive commands such as `git reset --hard`, `git checkout -- <path>`, `git clean`, branch deletion, or force-push unless the user explicitly asked for that exact class of operation.
+
+## Pushes and Remotes
+
+- Do not push unless the user asked to push, publish, update a PR branch, or perform an equivalent remote operation.
+- Before pushing, inspect `git remote -v`, `git status --short --branch`, and the upstream relationship.
+- Use plain `git push` only when the current branch tracks the intended upstream. Otherwise ask or use the explicit remote and branch requested by the user.
+- For rewritten history, prefer `git push --force-with-lease` over `--force`, and only when the user explicitly asked for a rewrite that requires it.
+- Never push to production, deployment, release, or protected branches unless the user explicitly requested that target.
+
+## Troubleshooting Signing
+
+If signing fails:
+
+1. Preserve the failed command output for the final response.
+2. Check effective configuration and available signing format:
+   - `git config --show-origin --get gpg.format`
+   - `git config --show-origin --get user.signingkey`
+   - `git config --show-origin --get gpg.program`
+3. For GPG signing, check whether `GPG_TTY` or pinentry may be needed, but do not set shell startup files or global config without user approval.
+4. For SSH signing, check whether the configured key and `gpg.ssh.allowedSignersFile` are present, but do not create or modify key files without user approval.
+5. Ask the user to unlock, configure, or authorize their signing key when interaction outside the sandbox is required.
+
+## Final Response
+
+Include:
+
+- Branch and whether the worktree is clean or what remains dirty.
+- Commit or tag hash/name and subject when created.
+- Signature verification result.
+- Verification commands run, or checks that were intentionally skipped.
+- Any remote push result, only if a push was requested.

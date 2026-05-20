@@ -1,0 +1,4 @@
+interface:
+  display_name: "Git Workflow as User"
+  short_description: "Run Git with the user's identity"
+  default_prompt: "Use $git-workflow-as-user for Git work that must preserve my identity, signing, and commit conventions."

@@ -46,30 +46,8 @@ These instructions apply to work under `~/.codex` unless a deeper `AGENTS.md` pr
 
 ## Git Commit Format
 
-- When creating commits in repositories without a stricter local convention, use Conventional Commits style.
-- Preferred format: `<type>(<scope>): <summary>`
-- Scope is optional when it does not add clarity: `<type>: <summary>`
-- `type` must be lowercase ASCII. Use `feat`, `fix`, `docs`, not `Feat`, `Fix`, or `DOCS`.
-- Use English for commit messages unless the repository already uses another language consistently.
-- Keep the summary in imperative mood, concise, and without a trailing period. Aim for 72 characters or fewer.
-- Commit only one coherent change per commit. Do not bundle unrelated refactors, formatting churn, and behavior changes together unless the user explicitly asks for one combined commit.
-- Add a body when the reason, tradeoff, migration, or risk is not obvious from the diff.
-- Use a breaking-change marker when applicable: `<type>(<scope>)!: <summary>` and include `BREAKING CHANGE:` in the body if needed.
-- Preferred types:
-  - `feat`: new user-facing or developer-facing capability
-  - `fix`: bug fix or regression fix
-  - `refactor`: internal restructuring without behavior change
-  - `docs`: documentation-only change
-  - `test`: test-only change
-  - `perf`: measurable performance improvement
-  - `build`: build, packaging, or dependency pipeline change
-  - `ci`: CI workflow or automation change
-  - `chore`: maintenance work that does not fit the categories above
-- Example summaries:
-  - `feat(auth): add token refresh on expiry`
-  - `fix(api): handle empty pagination cursor`
-  - `docs(readme): clarify local setup steps`
-  - `refactor(cli): split flag parsing from command execution`
+- Use the repository's documented commit message convention when one exists.
+- When creating commits in repositories without a stricter local convention, use the fallback convention in the `git-workflow-as-user` skill.
 
 ## Project Conventions
 
