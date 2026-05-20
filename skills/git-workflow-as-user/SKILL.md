@@ -7,9 +7,56 @@ description: Perform Git workflows using the repository owner's identity and sig
 
 ## Overview
 
-Operate Git as the user, not as the assistant. Preserve the user's local configuration, stage only the intended changes, use their existing signing setup for commits and tags, and verify the result before reporting success.
+Operate Git as the user, not as the assistant. Preserve the user's local configuration, stage only the intended changes, use their existing signing setup for commits and tags, and verify the result before reporting success. Prefer the fast path for routine commits and reserve the strict path for risky or complex Git work.
 
-## Start Every Workflow
+## Choose Workflow Depth
+
+Use the fast commit path when the request is a small, clear commit and the intended files are obvious.
+
+Use the strict workflow path when any of these apply:
+
+- The operation is amend, rebase, merge, tag, push, force-push, branch deletion, reset, clean, or other history/remote work.
+- The worktree is confusing, has overlapping unrelated changes, requires partial staging, or includes generated files/lockfiles whose inclusion is uncertain.
+- The staged changes include sensitive-looking filenames or values from the privacy and secret check.
+- Identity or signing config is missing, inconsistent, or unclear for a required signed commit.
+- A Git command failed, signing output is unclear, or the user asks for a careful/full verification pass.
+
+## Git Metadata Writes
+
+Commands that update `.git` metadata, such as `git add`, `git commit`, `git tag`, `git rebase`, and `git merge`, may require elevated permissions in sandboxed environments. If a Git metadata write fails with an index, lockfile, permission, or read-only filesystem error, rerun it with the required approval instead of changing the workflow. In the same repository/session, use the already-known required permission path directly for later metadata writes.
+
+Do not use elevated permissions to bypass safety rules. Destructive or history-changing commands still require explicit user intent.
+
+## Fast Commit Path
+
+For routine commits:
+
+1. Read the nearest `AGENTS.md`, repository README, and project manifest only when the commit depends on repository conventions that are not already clear.
+2. Inspect the branch and intended changes:
+   - `git status --short --branch`
+   - `git diff --stat -- <paths>` for targeted commits, or `git diff --stat` when the whole dirty worktree is intended.
+   - `git diff -- <paths>` for content that has not already been reviewed.
+   - `git diff --cached --stat` only when staged changes already exist.
+3. If identity and signing were not already confirmed in the current task, inspect the minimal effective config without changing it:
+   - `git config --show-origin --get user.name`
+   - `git config --show-origin --get user.email`
+   - `git config --show-origin --get commit.gpgsign`
+   - `git config --show-origin --get user.signingkey`
+4. Stage only intended paths with `git add -- <paths>`.
+5. Review the staged result:
+   - `git diff --cached --stat`
+   - `git diff --cached --name-status`
+   - `git diff --cached -- <paths>` when staged content was not already reviewed or partial staging was used.
+6. Run the privacy and secret check on the staged changes.
+7. Commit with the chosen subject/body.
+8. Verify the result:
+   - `git log -1 --show-signature --format=fuller`
+   - `git show --stat --oneline --decorate --no-renames HEAD`
+   - Run `git verify-commit HEAD` only when the signature output is missing or unclear, or when using the strict path.
+
+## Strict Workflow Path
+
+For complex or high-risk Git work:
 
 1. Read the nearest `AGENTS.md`, repository README, and project manifest when the Git operation depends on repo conventions.
 2. Inspect the repository state before editing or committing:
@@ -26,6 +73,13 @@ Operate Git as the user, not as the assistant. Preserve the user's local configu
    - `git config --show-origin --get gpg.format`
    - `git config --show-origin --get tag.gpgsign`
 5. Treat missing identity or signing configuration as a blocker for signed user commits. Ask the user how to proceed instead of inventing identity values or generating keys.
+6. Run the privacy and secret check on the staged changes. Prefer repository-configured scanners when available.
+7. After committing, verify with both:
+   - `git log -1 --show-signature --format=fuller`
+   - `git verify-commit HEAD`
+8. Inspect the final commit contents:
+   - `git show --stat --oneline --decorate --no-renames HEAD`
+   - Use `git show --name-status --format=fuller HEAD` when author, committer, or file list matters.
 
 ## Identity Rules
 
@@ -38,9 +92,37 @@ Operate Git as the user, not as the assistant. Preserve the user's local configu
 ## Staging
 
 - Prefer pathspec-specific staging over broad staging. Use `git add -- <paths>` for complete files and `git add -p -- <paths>` when only part of a file belongs in the commit.
-- Review the staged diff with `git diff --cached` before committing.
+- Review the staged result before committing, using the fast or strict path above.
 - Keep generated files, lockfiles, and docs in the same commit only when they are part of the requested change or repository workflow.
 - Never stage unrelated user changes as a convenience.
+
+## Privacy and Secret Check
+
+Before committing, check only staged changes unless the user asks for a wider audit. Treat likely leaks as commit blockers until removed, redacted, or explicitly confirmed safe by the user.
+
+Fast path:
+
+1. Inspect staged filenames with `git diff --cached --name-status`.
+2. Review staged added lines with `git diff --cached --unified=0 --no-color`.
+3. Look for sensitive filenames and paths:
+   - `.env`, `.env.*`, `.npmrc`, `.pypirc`, `.netrc`, kubeconfig files
+   - `id_rsa`, `id_ed25519`, `*.pem`, `*.key`, `*.p12`, `*.pfx`
+   - filenames containing `secret`, `credential`, `token`, `password`, or `private`
+4. Look for sensitive values in added lines:
+   - private keys, certificates, OAuth/JWT/Bearer tokens, API keys, access tokens, refresh tokens
+   - assignments to names containing `password`, `passwd`, `pwd`, `secret`, `token`, `api_key`, `apikey`, `auth`, `credential`, or `private_key`
+   - real personal data or local environment details: home directories, usernames, hostnames, email addresses, machine-specific absolute paths, production URLs, account IDs
+
+Strict path:
+
+- Use repository-configured scanners when present, without installing new tools or downloading rules unless the user approves. Examples include `pre-commit run --files <staged paths>`, `gitleaks protect --staged`, `detect-secrets-hook --baseline .secrets.baseline`, or equivalent local project scripts.
+- If no scanner exists, do the fast path check plus a full review of `git diff --cached --name-only` and `git diff --cached --unified=0 --no-color`.
+- Do not paste suspected secret values in final responses. Refer to the file and line or the variable/key name, and say the value was redacted.
+
+False positives:
+
+- Placeholders such as `example.com`, `your-token`, `REDACTED`, `<TOKEN>`, `changeme`, test fixtures, and documented fake keys may be committed when the surrounding context makes them clearly non-sensitive.
+- If a value looks real or environment-specific, stop before committing and ask the user whether to redact, ignore, or intentionally commit it.
 
 ## Commit Message Convention
 
@@ -98,18 +180,14 @@ When repository config already has `commit.gpgsign=true`, `git commit -m ...` sh
 Before committing:
 
 1. Confirm the staged diff is exactly the intended content.
-2. Choose the subject and body using the commit message convention above.
-3. Avoid creating a commit if verification or tests that should gate the change have not run, unless the user asks to commit anyway and the final response calls out the skipped checks.
+2. Run the privacy and secret check above.
+3. Choose the subject and body using the commit message convention above.
+4. Avoid creating a commit if verification or tests that should gate the change have not run, unless the user asks to commit anyway and the final response calls out the skipped checks.
 
 After committing:
 
-1. Verify the signature:
-   - `git log -1 --show-signature --format=fuller`
-   - If available, `git verify-commit HEAD`
-2. Inspect the final commit contents:
-   - `git show --stat --oneline --decorate --no-renames HEAD`
-   - Use `git show --name-status --format=fuller HEAD` when author, committer, or file list matters.
-3. Report the commit hash, subject, signature verification status, and tests/checks run.
+1. Verify the signature and inspect commit contents using the fast or strict path above.
+2. Report the commit hash, subject, signature verification status, and tests/checks run.
 
 ## Signed Tags
 
