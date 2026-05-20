@@ -3,6 +3,8 @@
 
 !.gitignore
 !AGENTS.md
+!README.md
+!README.*.md
 !prompts/
 !prompts/**
 !skills/
