@@ -8,6 +8,9 @@ pm_node             = "pve3"
 pm_storage          = "local-lvm"
 cloud_init_delivery = "native"
 cloud_init_user     = "root"
+# Keep false to avoid Proxmox rendering deprecated top-level cloud-init `user:`.
+# Set true only for older templates that rely on Proxmox ciuser injection.
+set_proxmox_ciuser  = false
 
 # Only used when cloud_init_delivery = "snippet".
 pm_snippets_storage = "pve3-cloud-init"

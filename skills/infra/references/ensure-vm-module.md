@@ -46,7 +46,8 @@ The module expects a Proxmox provider configuration from the caller stack:
 - `pm_node`: target Proxmox node for VM creation
 - `pm_storage`: storage used for VM disks and cloud-init disk
 - `cloud_init_delivery`: `native` for least-privilege Proxmox cloud-init fields, or `snippet` for `cicustom` user-data
-- `cloud_init_user`: guest user configured through Proxmox cloud-init
+- `cloud_init_user`: guest user used for SSH connections. In native mode, the VM template should define this as its cloud-init default user unless `set_proxmox_ciuser` is enabled.
+- `set_proxmox_ciuser`: opt-in compatibility flag to set Proxmox `ciuser` in native mode. Disabled by default because current Proxmox renders `ciuser` as deprecated top-level cloud-init `user:`.
 - `pm_snippets_storage`: snippets-enabled Proxmox storage referenced by `cicustom` when `cloud_init_delivery = "snippet"`
 - `vm_template`: clonable Proxmox template identifier accepted by the active provider version
 - `vm_name_prefix`: prefix used to derive hostnames
@@ -98,14 +99,14 @@ The inventory template groups hosts as:
 2. Compute master, worker, and optional dedicated control hostnames.
 3. Resolve the control node set: dedicated control VMs when `vm_control_count > 0`, otherwise the first master.
 4. Reject topologies without a master or control node.
-5. When using native delivery, clone VMs from `vm_template` with Proxmox `ciuser` and `sshkeys`.
+5. When using native delivery, clone VMs from `vm_template` with Proxmox `sshkeys`. Proxmox `ciuser` is only set when `set_proxmox_ciuser = true`.
 6. When using snippet delivery, render one snippet file per hostname under `<artifacts_dir>/snippets` and ensure matching snippet files exist in Proxmox snippet storage.
 7. Copy the control SSH key pair onto each control node and populate `known_hosts` with all node host public keys.
 8. Discover guest IPs and render the Ansible inventory.
 
 ## Notes
 
-- The VM config assumes `vmbr0`, DHCP, `cloud_init_user`, and the QEMU guest agent.
+- The VM config assumes `vmbr0`, DHCP, `cloud_init_user`, and the QEMU guest agent. In native mode, the template should define `cloud_init_user` as its cloud-init default user unless `set_proxmox_ciuser` is enabled.
 - The module adds an extra `scsi1` disk only when `vm_disk_gb > 0`.
 - Treat `vm_template` as an identifier that must match the provider version and environment you are targeting.
 - Use `cloud_init_delivery = "native"` unless the VM requires custom first-boot user-data that cannot be baked into the template.

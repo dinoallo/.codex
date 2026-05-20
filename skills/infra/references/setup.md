@@ -67,11 +67,16 @@ For least-privilege provisioning, prepare a Proxmox cloud-init template that alr
 
 Run these commands inside the VM before converting it to a Proxmox template.
 
+Ensure the template's cloud-init default user matches the stack's `cloud_init_user`, because native mode leaves `set_proxmox_ciuser = false` by default. This avoids the deprecated top-level `user:` field that Proxmox currently emits when `ciuser` is set.
+
 Create the fixed cloud-init policy:
 
 ```bash
 sudo tee /etc/cloud/cloud.cfg.d/99-infra-skill.cfg >/dev/null <<'EOF'
 # Fixed policy for VMs provisioned by this infra skill.
+system_info:
+  default_user:
+    name: root
 manage_etc_hosts: false
 disable_root: false
 ssh_pwauth: false
@@ -121,6 +126,8 @@ Do not bake dynamic fleet values into the template:
 - stack-specific API tokens or secrets
 
 Those values should come from the stack, Proxmox native cloud-init settings, or generated artifacts.
+
+If you must use an older template that relies on Proxmox to set the login user, set `set_proxmox_ciuser = true` in the stack. That preserves compatibility but may reintroduce a cloud-init deprecation warning from Proxmox-generated user-data.
 
 ## Snippet Upload Prerequisite
 

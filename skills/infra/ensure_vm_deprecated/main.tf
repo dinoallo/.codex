@@ -11,6 +11,7 @@ module "ensure_vm" {
   pm_snippets_storage = var.pm_snippets_storage
   cloud_init_delivery = var.cloud_init_delivery
   cloud_init_user     = var.cloud_init_user
+  set_proxmox_ciuser  = var.set_proxmox_ciuser
   vm_template         = var.vm_template
   vm_name_prefix      = var.vm_name_prefix
   vm_master_count     = var.vm_master_count

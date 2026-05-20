@@ -58,9 +58,15 @@ variable "cloud_init_delivery" {
 }
 
 variable "cloud_init_user" {
-  description = "Guest user configured through Proxmox cloud-init."
+  description = "Guest user used for SSH connections. In native mode, the template should define this as its cloud-init default user unless set_proxmox_ciuser is enabled."
   type        = string
   default     = "root"
+}
+
+variable "set_proxmox_ciuser" {
+  description = "Set Proxmox ciuser in native cloud-init mode. Disabled by default because current Proxmox renders ciuser as deprecated top-level cloud-init user."
+  type        = bool
+  default     = false
 }
 
 variable "vm_template" {

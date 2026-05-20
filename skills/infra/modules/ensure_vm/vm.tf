@@ -29,7 +29,7 @@ resource "proxmox_vm_qemu" "vm" {
   # Native cloud-init fields preserve least-privilege provisioning. Snippet
   # delivery is opt-in for custom user-data and requires pre-uploaded snippets.
   cicustom = var.cloud_init_delivery == "snippet" ? "user=${var.pm_snippets_storage}:snippets/${local.vm_hostnames[count.index]}_user_data.yml" : null
-  ciuser   = var.cloud_init_user
+  ciuser   = var.cloud_init_delivery == "native" && var.set_proxmox_ciuser ? var.cloud_init_user : null
   sshkeys  = tls_private_key.vm_ssh_key.public_key_openssh
 
   # Tell cloud-init to use DHCP

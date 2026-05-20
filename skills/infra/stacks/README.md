@@ -13,7 +13,7 @@ cp -R stacks/_template stacks/<fleet-name>
 2. Edit `stacks/<fleet-name>/tf.vars` (or another `*.tfvars` file) with your prefix, counts, and Proxmox settings.
    Keep at least one master or one dedicated control node. Worker-only fleets are invalid.
    Leave `vm_control_count = 0` to use the first master as the control node.
-3. Keep `cloud_init_delivery = "native"` for least-privilege provisioning. Use `cloud_init_delivery = "snippet"` only when custom first-boot user-data cannot be baked into the template.
+3. Keep `cloud_init_delivery = "native"` for least-privilege provisioning. In native mode, leave `set_proxmox_ciuser = false` and make sure the template's cloud-init default user matches `cloud_init_user`. Use `cloud_init_delivery = "snippet"` only when custom first-boot user-data cannot be baked into the template.
 4. Run OpenTofu in that folder:
 
 ```bash

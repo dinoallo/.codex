@@ -15,6 +15,7 @@ This runbook documents the standard workflow to create and verify a VM fleet wit
 1. `stacks/<fleet-name>/tf.vars` contains valid Proxmox API token credentials.
 2. `pm_node`, `pm_storage`, and `vm_template` are valid for your environment.
 3. For least-privilege provisioning, the VM template includes the baseline cloud-init and SSH policy from `references/setup.md`.
+   The template's cloud-init default user should match `cloud_init_user` unless `set_proxmox_ciuser = true`.
 4. If `cloud_init_delivery = "snippet"`, `pm_snippets_storage` is valid and matching snippet filenames exist in that storage before apply.
 
 ## Baseline Variables
@@ -28,6 +29,7 @@ vm_worker_count     = <worker_count>
 vm_control_count    = 0
 cloud_init_delivery = "native"
 cloud_init_user     = "root"
+set_proxmox_ciuser  = false
 artifacts_dir       = ".artifacts"
 ```
 
@@ -53,7 +55,7 @@ cd stacks/<fleet-name>
 ../../.tools/opentofu/1.11.6/tofu validate
 ```
 
-3. If using native delivery, confirm the plan uses `ciuser` and `sshkeys` without a `cicustom` value.
+3. If using native delivery, confirm the plan uses `sshkeys` without a `cicustom` value. It should not set `ciuser` unless `set_proxmox_ciuser = true`.
 
 4. If using snippet delivery, confirm local rendered snippets exist for all hosts.
 

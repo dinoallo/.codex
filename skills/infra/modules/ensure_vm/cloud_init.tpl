@@ -5,7 +5,8 @@
 hostname: ${hostname}
 fqdn: ${hostname}
 manage_etc_hosts: false
-user: ${cloud_init_user}
+users:
+  - default
 write_files:
   - path: /etc/infra-node-role
     permissions: "0644"
