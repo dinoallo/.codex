@@ -27,6 +27,20 @@ Commands that update `.git` metadata, such as `git add`, `git commit`, `git tag`
 
 Do not use elevated permissions to bypass safety rules. Destructive or history-changing commands still require explicit user intent.
 
+## User Approval Prompts
+
+Some Git operations may pause until the user approves a sandbox escalation. When asking for approval, state the specific purpose and keep any suggested persistent approval narrowly scoped.
+
+For repeated routine Git metadata writes, suggest a prefix rule only when it matches the operation being requested:
+
+- `["git", "add"]` for staging selected paths.
+- `["git", "commit"]` for creating commits with the user's configured identity and signing setup.
+- `["git", "tag"]` only when the user has asked to create tags.
+
+Tell the user that the approval UI may offer a persistent/default approval option for the suggested prefix. Choosing that option can avoid repeated prompts for the same class of Git command in later steps.
+
+Persistent approval only removes the sandbox prompt. It does not replace the need for explicit user intent before remote, destructive, or history-changing actions such as push, force-push, reset, clean, branch deletion, rebase, amend, or tag movement. Do not request broad prefixes such as `["git"]`, and do not suggest persistent approval for destructive commands.
+
 ## Fast Commit Path
 
 For routine commits:
