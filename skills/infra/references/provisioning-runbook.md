@@ -4,7 +4,7 @@ This runbook documents the standard workflow to create and verify a VM fleet wit
 
 ## Scope
 
-- Provision target: master and worker VMs
+- Provision target: control, master, and worker VMs
 - Prefix: configurable (`vm_name_prefix`)
 - Module: `modules/ensure_vm`
 - Stack root: `stacks/<fleet-name>/`
@@ -25,12 +25,14 @@ Set these in `stacks/<fleet-name>/tf.vars`:
 vm_name_prefix      = "<vm_name_prefix>"
 vm_master_count     = <master_count>
 vm_worker_count     = <worker_count>
+vm_control_count    = 0
 cloud_init_delivery = "native"
 cloud_init_user     = "root"
 artifacts_dir       = ".artifacts"
 ```
 
 `artifacts_dir` should normally stay `.artifacts` so outputs remain stack-local.
+When `vm_control_count = 0`, the first master acts as the control node. Set `vm_control_count > 0` only when you need dedicated control VMs. A worker-only topology is invalid.
 
 Use `cloud_init_delivery = "snippet"` only when custom first-boot user-data cannot be baked into the template. In that mode, also set `pm_snippets_storage`.
 
@@ -59,6 +61,7 @@ Examples:
 
 - `.artifacts/snippets/<vm_name_prefix>-master-1_user_data.yml`
 - `.artifacts/snippets/<vm_name_prefix>-worker-1_user_data.yml`
+- `.artifacts/snippets/<vm_name_prefix>-control-1_user_data.yml` when using dedicated control VMs
 
 5. If using snippet delivery, ensure matching filenames already exist in Proxmox snippet storage.
 
@@ -66,6 +69,7 @@ Examples:
 
 - `<pm_snippets_storage>:snippets/<vm_name_prefix>-master-1_user_data.yml`
 - `<pm_snippets_storage>:snippets/<vm_name_prefix>-worker-1_user_data.yml`
+- `<pm_snippets_storage>:snippets/<vm_name_prefix>-control-1_user_data.yml` when using dedicated control VMs
 
 6. Apply:
 
@@ -85,6 +89,8 @@ Examples:
 
 ```bash
 ../../.tools/opentofu/1.11.6/tofu output vm_names
+../../.tools/opentofu/1.11.6/tofu output control_vm_names
+../../.tools/opentofu/1.11.6/tofu output control_vm_ipv4_addresses
 ../../.tools/opentofu/1.11.6/tofu output vm_vmid
 ```
 
@@ -125,6 +131,16 @@ ssh -i .artifacts/id_ed25519_tofu \
   <cloud_init_user>@<vm_ip> 'hostname'
 ```
 
+6. Verify control-node SSH fan-out:
+
+```bash
+ssh -i .artifacts/id_ed25519_tofu \
+  -o BatchMode=yes \
+  -o StrictHostKeyChecking=no \
+  -o UserKnownHostsFile=/dev/null \
+  <cloud_init_user>@<control_ip> 'ssh -o BatchMode=yes <cloud_init_user>@<target_vm_ip> hostname'
+```
+
 ## Known Failure Mode: SSH Key Mismatch
 
 Symptom:
@@ -133,9 +149,10 @@ Symptom:
 
 Likely causes:
 
-- Proxmox snippet storage contains a stale `ssh_authorized_keys` value that does not match local `.artifacts/id_ed25519_tofu`.
+- Proxmox snippet storage contains a stale `ssh_authorized_keys` value that does not match local `.artifacts/id_ed25519_tofu.pub`.
 - The VM template does not permit key-only login for `cloud_init_user`.
 - The stack changed `cloud_init_delivery` without replacing or re-running cloud-init on existing VMs.
+- The control key delivery provisioner could not SSH to the resolved control node.
 
 Recovery flow:
 

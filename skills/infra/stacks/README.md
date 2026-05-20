@@ -11,6 +11,8 @@ cp -R stacks/_template stacks/<fleet-name>
 ```
 
 2. Edit `stacks/<fleet-name>/tf.vars` (or another `*.tfvars` file) with your prefix, counts, and Proxmox settings.
+   Keep at least one master or one dedicated control node. Worker-only fleets are invalid.
+   Leave `vm_control_count = 0` to use the first master as the control node.
 3. Keep `cloud_init_delivery = "native"` for least-privilege provisioning. Use `cloud_init_delivery = "snippet"` only when custom first-boot user-data cannot be baked into the template.
 4. Run OpenTofu in that folder:
 
@@ -25,3 +27,4 @@ cd stacks/<fleet-name>
 - Module code is shared in `modules/ensure_vm`.
 - State is isolated per stack directory.
 - Generated artifacts are isolated by default in `stacks/<fleet-name>/.artifacts/`.
+- The delivered key pair is `.artifacts/id_ed25519_tofu` and `.artifacts/id_ed25519_tofu.pub`; use it to log into the control node.

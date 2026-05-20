@@ -6,6 +6,15 @@ hostname: ${hostname}
 fqdn: ${hostname}
 manage_etc_hosts: false
 user: ${cloud_init_user}
+write_files:
+  - path: /etc/infra-node-role
+    permissions: "0644"
+    content: |
+      ${node_role}
+  - path: /etc/infra-control-node
+    permissions: "0644"
+    content: |
+      ${is_control_node}
 disable_root: false
 ssh_authorized_keys:
   - ${ssh_public_key}

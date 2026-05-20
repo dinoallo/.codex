@@ -1,6 +1,6 @@
 ---
 name: proxmox-ensure-vm
-description: Use when the user wants to provision or modify a small Proxmox VM fleet with OpenTofu or Terraform, especially linked clones from a cloud-init template, least-privilege native cloud-init SSH key injection, optional cicustom snippet-based cloud-init, or generated Ansible inventory. This skill bundles a reusable `modules/ensure_vm` module and stack wrappers for per-fleet state isolation.
+description: Use when the user wants to provision or modify a small Proxmox VM fleet with OpenTofu or Terraform, especially linked clones from a cloud-init template, control/master/worker node topology, least-privilege native cloud-init SSH key injection, optional cicustom snippet-based cloud-init, generated Ansible inventory, or a control-node SSH key pair. This skill bundles a reusable `modules/ensure_vm` module and stack wrappers for per-fleet state isolation.
 ---
 
 # Proxmox Ensure VM
@@ -24,7 +24,8 @@ Use this skill when the task is to create, adjust, or explain the bundled Proxmo
 1. Confirm the target Proxmox environment: API endpoint, auth model, node, storage, and clonable template.
 2. Prefer `cloud_init_delivery = "native"` for least-privilege provisioning. Confirm the template has the baseline cloud-init and SSH policy from `references/setup.md`.
 3. Confirm snippet storage and upload path before apply when using `cicustom`: rendered local snippets must exist in Proxmox snippet storage under matching filenames.
-4. Adjust counts and sizing first: master count, worker count, memory, cores, and optional extra disk.
+4. Adjust counts and sizing first: control count, master count, worker count, memory, cores, and optional extra disk.
+   If `vm_control_count = 0`, the first master acts as the control node. A worker-only fleet is invalid.
 5. Review the network and cloud-init assumptions before changing the module:
    `vmbr0`, DHCP, `cloud_init_user`, optional `cicustom` snippet references, and guest-agent-based IP discovery.
 6. If setup, validation tooling, or template preparation details are missing, read `references/setup.md`.
@@ -35,6 +36,10 @@ Use this skill when the task is to create, adjust, or explain the bundled Proxmo
 
 - The module uses `telmate/proxmox` for VM creation.
 - The module defaults to native Proxmox cloud-init fields for SSH key injection and does not require snippet upload permission.
+- The module supports control, master, and worker roles. When no dedicated control VM is requested, the first master is the control node.
+- The module must create at least one master or one dedicated control node; creating only workers is invalid.
+- The generated key pair in `.artifacts/id_ed25519_tofu` and `.artifacts/id_ed25519_tofu.pub` is the control-node login key pair.
+- Control nodes receive the same private/public key pair under `~/.ssh/id_ed25519_tofu*` and all node host public keys in `~/.ssh/known_hosts`, so the control node can SSH to all fleet nodes authorized with the generated public key.
 - The module does not upload snippets to Proxmox; when `cloud_init_delivery = "snippet"`, it only renders them locally.
 - Prefer baking stable cloud-init policy into the VM template and injecting only dynamic values such as SSH keys through Proxmox native cloud-init fields.
 - Treat snippet upload permission as an elevated capability because `cicustom` user-data runs as first-boot root configuration.

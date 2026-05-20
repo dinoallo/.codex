@@ -21,7 +21,7 @@ Skill is valid!
 
 ## OpenTofu Or Terraform
 
-Prefer an existing `tofu`, `opentofu`, or `terraform` binary if one is already installed. When none is available, a repo-local OpenTofu binary is acceptable.
+Prefer an existing `tofu`, `opentofu`, or `terraform` binary if one is already installed. The module requires Terraform-compatible CLI behavior from version `1.4.0` or newer because it uses the built-in `terraform_data` resource. When none is available, a repo-local OpenTofu binary is acceptable.
 
 This repo was validated on April 23, 2026 with OpenTofu `v1.11.6` on Linux `x86_64`.
 
@@ -132,6 +132,7 @@ The default filename pattern is:
 
 - `<vm_name_prefix>-master-<n>_user_data.yml`
 - `<vm_name_prefix>-worker-<n>_user_data.yml`
+- `<vm_name_prefix>-control-<n>_user_data.yml` when using dedicated control VMs
 
 For a single master with `vm_name_prefix=<vm_name_prefix>`, upload:
 

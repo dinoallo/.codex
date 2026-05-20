@@ -79,12 +79,33 @@ variable "vm_master_count" {
   description = "Number of master VMs to create"
   type        = number
   default     = 1
+
+  validation {
+    condition     = var.vm_master_count >= 0 && floor(var.vm_master_count) == var.vm_master_count
+    error_message = "vm_master_count must be a whole number greater than or equal to 0."
+  }
 }
 
 variable "vm_worker_count" {
   description = "Number of worker VMs to create"
   type        = number
   default     = 2
+
+  validation {
+    condition     = var.vm_worker_count >= 0 && floor(var.vm_worker_count) == var.vm_worker_count
+    error_message = "vm_worker_count must be a whole number greater than or equal to 0."
+  }
+}
+
+variable "vm_control_count" {
+  description = "Number of dedicated control VMs to create. Set to 0 to use the first master as the control node."
+  type        = number
+  default     = 0
+
+  validation {
+    condition     = var.vm_control_count >= 0 && floor(var.vm_control_count) == var.vm_control_count
+    error_message = "vm_control_count must be a whole number greater than or equal to 0."
+  }
 }
 
 variable "vm_memory_mb" {

@@ -15,6 +15,7 @@ module "ensure_vm" {
   vm_name_prefix      = var.vm_name_prefix
   vm_master_count     = var.vm_master_count
   vm_worker_count     = var.vm_worker_count
+  vm_control_count    = var.vm_control_count
   vm_memory_mb        = var.vm_memory_mb
   vm_cores            = var.vm_cores
   vm_disk_gb          = var.vm_disk_gb

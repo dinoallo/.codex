@@ -4,10 +4,13 @@ Read this file when you need the concrete behavior of the reusable `modules/ensu
 
 ## Overview
 
-`modules/ensure_vm` is a reusable OpenTofu or Terraform module for cloning a Proxmox template into a master/worker fleet. It:
+`modules/ensure_vm` is a reusable OpenTofu or Terraform module for cloning a Proxmox template into a control/master/worker fleet. It:
 
-- generates one local SSH key pair,
-- injects SSH keys through native Proxmox cloud-init fields by default,
+- generates one local control SSH key pair,
+- injects the public key through native Proxmox cloud-init fields on all VMs by default,
+- installs the key pair and all node SSH host public keys on control nodes so the control node can SSH to all fleet nodes,
+- defaults the control node to the first master when no dedicated control VM is requested,
+- rejects worker-only fleets,
 - optionally renders one cloud-init user-data snippet per VM locally,
 - optionally references pre-existing snippet files via `cicustom`,
 - creates the VMs as linked clones,
@@ -24,7 +27,7 @@ Read this file when you need the concrete behavior of the reusable `modules/ensu
 - `modules/ensure_vm/cloud_init.tpl`: user-data template with `manage_etc_hosts: false`
 - `modules/ensure_vm/vm.tf`: VM clone resources and inventory generation
 - `modules/ensure_vm/inventory.tpl`: Ansible inventory template
-- `modules/ensure_vm/outputs.tf`: VM names and VMIDs
+- `modules/ensure_vm/outputs.tf`: VM names, control node identity, VMIDs, and control key paths
 - `stacks/_template/`: starter stack for new fleets
 - `ensure_vm/`: legacy-compatible stack wrapper around the module (with `moved` blocks)
 
@@ -47,15 +50,18 @@ The module expects a Proxmox provider configuration from the caller stack:
 - `pm_snippets_storage`: snippets-enabled Proxmox storage referenced by `cicustom` when `cloud_init_delivery = "snippet"`
 - `vm_template`: clonable Proxmox template identifier accepted by the active provider version
 - `vm_name_prefix`: prefix used to derive hostnames
-- `vm_master_count` / `vm_worker_count`: stable master/worker fleet sizing
+- `vm_master_count` / `vm_worker_count` / `vm_control_count`: stable fleet sizing. Set `vm_control_count = 0` to use the first master as control.
 - `vm_memory_mb`, `vm_cores`, `vm_disk_gb`: hardware sizing
 - `artifacts_dir`: per-stack output directory for generated key, inventory, and optional snippets
+
+Valid topology requires at least one master or one dedicated control node. A worker-only fleet is invalid.
 
 ## Generated Artifacts
 
 By default, the module writes generated outputs under `<stack>/.artifacts/`:
 
-- `.artifacts/id_ed25519_tofu`
+- `.artifacts/id_ed25519_tofu`: private key used to log into the control node
+- `.artifacts/id_ed25519_tofu.pub`: public key authorized on all fleet nodes
 - `.artifacts/ansible_inventory.ini`
 - `.artifacts/snippets/<hostname>_user_data.yml` when `cloud_init_delivery = "snippet"`
 
@@ -63,6 +69,12 @@ The native cloud-init mode enables:
 
 - SSH login for `cloud_init_user` with the generated public key
 - no per-run snippet upload requirement
+
+The control key delivery step enables:
+
+- SSH login from the operator to the control node with `.artifacts/id_ed25519_tofu`
+- SSH from the control node to all fleet nodes using `~/.ssh/id_ed25519_tofu`
+- SSH host public keys for all fleet node IPs in the control node's `~/.ssh/known_hosts`
 
 The optional snippet template enables:
 
@@ -73,17 +85,23 @@ The optional snippet template enables:
 
 The inventory template groups hosts as:
 
+- `control`
+- `masters`
 - `first_master`
 - `other_masters`
 - `workers`
+- `all_nodes`
 
 ## Execution Flow
 
-1. Generate the SSH key pair.
-2. Compute master and worker hostnames.
-3. When using native delivery, clone VMs from `vm_template` with Proxmox `ciuser` and `sshkeys`.
-4. When using snippet delivery, render one snippet file per hostname under `<artifacts_dir>/snippets` and ensure matching snippet files exist in Proxmox snippet storage.
-5. Discover guest IPs and render the Ansible inventory.
+1. Generate the control SSH key pair.
+2. Compute master, worker, and optional dedicated control hostnames.
+3. Resolve the control node set: dedicated control VMs when `vm_control_count > 0`, otherwise the first master.
+4. Reject topologies without a master or control node.
+5. When using native delivery, clone VMs from `vm_template` with Proxmox `ciuser` and `sshkeys`.
+6. When using snippet delivery, render one snippet file per hostname under `<artifacts_dir>/snippets` and ensure matching snippet files exist in Proxmox snippet storage.
+7. Copy the control SSH key pair onto each control node and populate `known_hosts` with all node host public keys.
+8. Discover guest IPs and render the Ansible inventory.
 
 ## Notes
 
