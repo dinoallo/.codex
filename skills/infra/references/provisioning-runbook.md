@@ -12,11 +12,12 @@ This runbook documents the standard workflow to create and verify a VM fleet wit
 
 ## Prerequisites
 
-1. `stacks/<fleet-name>/tf.vars` contains valid Proxmox API token credentials.
-2. `pm_node`, `pm_storage`, and `vm_template` are valid for your environment.
-3. For least-privilege provisioning, the VM template includes the baseline cloud-init and SSH policy from `references/setup.md`.
+1. The stack has been initialized from `stacks/_template` into `stacks/<fleet-name>/`.
+2. `stacks/<fleet-name>/tf.vars` contains valid Proxmox API token credentials written locally by the user. Do not collect token secrets in chat and do not print this file.
+3. `pm_node`, `pm_storage`, and `vm_template` are valid for your environment.
+4. For least-privilege provisioning, the VM template includes the baseline cloud-init and SSH policy from `references/setup.md`.
    The template's cloud-init default user should match `cloud_init_user` unless `set_proxmox_ciuser = true`.
-4. If `cloud_init_delivery = "snippet"`, `pm_snippets_storage` is valid and matching snippet filenames exist in that storage before apply.
+5. If `cloud_init_delivery = "snippet"`, `pm_snippets_storage` is valid and matching snippet filenames exist in that storage before apply.
 
 ## Baseline Variables
 
@@ -40,24 +41,35 @@ Use `cloud_init_delivery = "snippet"` only when custom first-boot user-data cann
 
 ## Provisioning Steps
 
-1. Create a new stack from template and set values:
+1. Initialize a new stack from the template and create a local variables file:
 
 ```bash
 cp -R stacks/_template stacks/<fleet-name>
 cp stacks/<fleet-name>/tf.vars.example stacks/<fleet-name>/tf.vars
 ```
 
-2. Render and validate module inputs.
+Stop here and let the user fill `stacks/<fleet-name>/tf.vars` locally. The agent should check only that the file exists and should not print its contents.
+
+2. Render and validate module inputs after the user confirms `tf.vars` is filled.
 
 ```bash
 cd stacks/<fleet-name>
+../../.tools/opentofu/1.11.6/tofu init -backend=false
 ../../.tools/opentofu/1.11.6/tofu fmt
 ../../.tools/opentofu/1.11.6/tofu validate
 ```
 
-3. If using native delivery, confirm the plan uses `sshkeys` without a `cicustom` value. It should not set `ciuser` unless `set_proxmox_ciuser = true`.
+3. Plan with the local variable file:
 
-4. If using snippet delivery, confirm local rendered snippets exist for all hosts.
+```bash
+../../.tools/opentofu/1.11.6/tofu plan -var-file=tf.vars
+```
+
+Confirm the plan's VM names, count, template, storage, and control-node identity with the user before applying.
+
+4. If using native delivery, confirm the plan uses `sshkeys` without a `cicustom` value. It should not set `ciuser` unless `set_proxmox_ciuser = true`.
+
+5. If using snippet delivery, confirm local rendered snippets exist for all hosts.
 
 Examples:
 
@@ -65,7 +77,7 @@ Examples:
 - `.artifacts/snippets/<vm_name_prefix>-worker-1_user_data.yml`
 - `.artifacts/snippets/<vm_name_prefix>-control-1_user_data.yml` when using dedicated control VMs
 
-5. If using snippet delivery, ensure matching filenames already exist in Proxmox snippet storage.
+6. If using snippet delivery, ensure matching filenames already exist in Proxmox snippet storage.
 
 Examples:
 
@@ -73,13 +85,13 @@ Examples:
 - `<pm_snippets_storage>:snippets/<vm_name_prefix>-worker-1_user_data.yml`
 - `<pm_snippets_storage>:snippets/<vm_name_prefix>-control-1_user_data.yml` when using dedicated control VMs
 
-6. Apply:
+7. Apply only after explicit user confirmation:
 
 ```bash
 ../../.tools/opentofu/1.11.6/tofu apply -auto-approve -var-file=tf.vars
 ```
 
-7. If re-provisioning is required, force replacement:
+8. If re-provisioning is required, force replacement:
 
 ```bash
 ../../.tools/opentofu/1.11.6/tofu apply -auto-approve -var-file=tf.vars -replace='module.ensure_vm.proxmox_vm_qemu.vm[0]'
@@ -142,6 +154,14 @@ ssh -i .artifacts/id_ed25519_tofu \
   -o UserKnownHostsFile=/dev/null \
   <cloud_init_user>@<control_ip> 'ssh -o BatchMode=yes <cloud_init_user>@<target_vm_ip> hostname'
 ```
+
+7. Verify convergence:
+
+```bash
+../../.tools/opentofu/1.11.6/tofu plan -var-file=tf.vars -detailed-exitcode
+```
+
+Expected result after a successful apply is no changes.
 
 ## Known Failure Mode: SSH Key Mismatch
 

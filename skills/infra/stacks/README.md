@@ -4,21 +4,32 @@ Each subdirectory under `stacks/` is an independent root module with its own sta
 
 ## Create A New Fleet Stack
 
-1. Copy `_template` to a new folder:
+The default workflow is init-only first, local secret entry second, then plan/apply after confirmation. A concise user prompt can be:
+
+```text
+$proxmox-ensure-vm Initialize stacks/pve-test in the current directory.
+Do not plan or apply yet. I will fill stacks/pve-test/tf.vars locally.
+```
+
+1. Copy `_template` to a new folder and create a local variables file:
 
 ```bash
 cp -R stacks/_template stacks/<fleet-name>
+cp stacks/<fleet-name>/tf.vars.example stacks/<fleet-name>/tf.vars
 ```
 
-2. Edit `stacks/<fleet-name>/tf.vars` (or another `*.tfvars` file) with your prefix, counts, and Proxmox settings.
+2. Edit `stacks/<fleet-name>/tf.vars` with your prefix, counts, and Proxmox settings. Keep token secrets in this local file, not in chat or committed source.
    Keep at least one master or one dedicated control node. Worker-only fleets are invalid.
    Leave `vm_control_count = 0` to use the first master as the control node.
 3. Keep `cloud_init_delivery = "native"` for least-privilege provisioning. In native mode, leave `set_proxmox_ciuser = false` and make sure the template's cloud-init default user matches `cloud_init_user`. Use `cloud_init_delivery = "snippet"` only when custom first-boot user-data cannot be baked into the template.
-4. Run OpenTofu in that folder:
+4. Run OpenTofu in that folder. Plan first; apply only after reviewing the plan:
 
 ```bash
 cd stacks/<fleet-name>
-../../.tools/opentofu/1.11.6/tofu init
+../../.tools/opentofu/1.11.6/tofu init -backend=false
+../../.tools/opentofu/1.11.6/tofu fmt
+../../.tools/opentofu/1.11.6/tofu validate
+../../.tools/opentofu/1.11.6/tofu plan -var-file=tf.vars
 ../../.tools/opentofu/1.11.6/tofu apply -auto-approve -var-file=tf.vars
 ```
 
@@ -65,7 +76,7 @@ pveum aclmod /nodes/<pm_node> -user <user@realm> -role InfraSkillNode
 pveum aclmod /sdn/zones/localnetwork/<bridge> -user <user@realm> -role InfraSkillNetwork
 ```
 
-If you scope VM permissions tighter than `/vms`, grant the VM role to the source template VM and to the target VMID paths that this stack will create.
+Use propagation on VM and SDN scopes when the target objects live under those paths, for example `-propagate 1` on `/vms`. If you scope VM permissions tighter than `/vms`, grant the VM role to the source template VM and to the target VMID paths that this stack will create.
 
 For privilege-separated API tokens, assign the same ACLs to the token as well, using `-token '<user@realm>!<tokenid>'`. Proxmox intersects token permissions with the backing user's permissions.
 

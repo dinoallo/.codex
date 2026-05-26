@@ -1,5 +1,8 @@
+# Copy this file to tf.vars and fill it locally. Do not paste token secrets in chat.
+# tf.vars should be git-ignored and treated as a local secret file.
+
 pm_api_url = "https://proxmox.example.com:8006/api2/json"
-# Recommended: create an API token in Proxmox: user@realm!tokenid
+# Recommended token id format: user@realm!tokenid
 pm_api_token_id     = "terraform-prov@pve!terraform-token"
 pm_api_token_secret = "replace-me"
 pm_tls_insecure     = true
