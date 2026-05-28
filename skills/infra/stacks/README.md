@@ -7,7 +7,7 @@ Each subdirectory under `stacks/` is an independent root module with its own sta
 The default workflow is init-only first, local secret entry second, then plan/apply after confirmation. A concise user prompt can be:
 
 ```text
-$proxmox-ensure-vm Initialize stacks/pve-test in the current directory.
+$infra Initialize stacks/pve-test in the current directory.
 Do not plan or apply yet. I will fill stacks/pve-test/tf.vars locally.
 ```
 

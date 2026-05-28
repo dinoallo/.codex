@@ -1,4 +1,4 @@
 interface:
-  display_name: "Proxmox Ensure VM"
+  display_name: "Infra"
   short_description: "Provision Proxmox VM fleets with control nodes"
-  default_prompt: "Use $proxmox-ensure-vm to initialize a Proxmox fleet stack here, then wait while I fill the local tf.vars file."
+  default_prompt: "Use $infra to initialize a Proxmox fleet stack here, then wait while I fill the local tf.vars file."

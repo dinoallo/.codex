@@ -1,9 +1,9 @@
 ---
-name: proxmox-ensure-vm
+name: infra
 description: Use when the user wants to provision or modify a small Proxmox VM fleet with OpenTofu or Terraform, especially linked clones from a cloud-init template, control/master/worker node topology, least-privilege native cloud-init SSH key injection, optional cicustom snippet-based cloud-init, generated Ansible inventory, or a control-node SSH key pair. This skill bundles a reusable `modules/ensure_vm` module and stack wrappers for per-fleet state isolation.
 ---
 
-# Proxmox Ensure VM
+# Infra
 
 Use this skill when the task is to create, adjust, or explain the bundled Proxmox OpenTofu layout. The reusable module is in `modules/ensure_vm`, while each fleet should run from an independent root stack under `stacks/<fleet>`.
 
