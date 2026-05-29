@@ -49,6 +49,11 @@ Third-party skills are vendored into `skills/<name>` so a normal `git pull` is
 enough to sync machines. The source manifest is `skills/third-party.toml`; the
 resolved commits live in `skills/third-party.lock.json`.
 
+When adding or updating a third-party Codex skill, use the
+`third-party-skill-vendor` skill. External installer commands such as
+`npx skills add ...` may help identify a source, but the final repo state should
+come from the manifest, lock file, and vendored diff below.
+
 Add an entry like this:
 
 ```toml

@@ -52,6 +52,7 @@ These instructions apply to work under `~/.codex` unless a deeper `AGENTS.md` pr
 ## Project Conventions
 
 - Prefer repository-local conventions over global preferences when they conflict.
+- For third-party Codex skill installs or updates under `~/.codex`, including requests that provide `npx skills add ...`, use the `third-party-skill-vendor` skill and the `skills/third-party.toml` plus `scripts/skill-vendor.py` workflow instead of treating an external installer as final state.
 - If a repository has no documented workflow, infer the workflow from its current scripts, config, tests, and file structure.
 - When behavior changes, update nearby docs only if they are clearly part of the affected workflow.
 

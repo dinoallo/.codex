@@ -1,0 +1,4 @@
+interface:
+  display_name: "Third-Party Skill Vendor"
+  short_description: "Vendor third-party skills with locks"
+  default_prompt: "Use $third-party-skill-vendor to add or update a third-party Codex skill through the local manifest and lock workflow."

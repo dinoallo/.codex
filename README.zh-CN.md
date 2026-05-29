@@ -49,6 +49,10 @@ Codex Control Deck 是我的个人 `.codex` dotfiles 仓库：这里放着手工
 `git pull` 就能同步。来源清单放在 `skills/third-party.toml`，实际锁定的
 commit 放在 `skills/third-party.lock.json`。
 
+添加或更新第三方 Codex skill 时，使用 `third-party-skill-vendor` skill。
+`npx skills add ...` 这类外部安装命令可以用来辅助确认来源，但最终仓库状态
+应来自下面的 manifest、lock 文件和可审查的 vendored diff。
+
 添加一个这样的条目：
 
 ```toml
