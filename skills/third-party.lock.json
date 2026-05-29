@@ -1,4 +1,11 @@
 {
   "version": 1,
-  "skills": {}
+  "skills": {
+    "sealos-install": {
+      "repo": "git@github.com:labring/sealos-pro.git",
+      "path": "skills/sealos-install",
+      "ref": "main",
+      "commit": "7f9e8edc9ee9714573baaaea37a1b4a7337bdf11"
+    }
+  }
 }

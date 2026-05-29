@@ -1,0 +1,6 @@
+interface:
+  display_name: "Sealos 安装"
+  short_description: "使用 ID、IP 和下载包矩阵安装 Sealos Cloud"
+  default_prompt: "使用 $sealos-install 安装或验收 Sealos Cloud。必填输入只有 ID、IP 和下载包矩阵；默认 SSH 账号密码使用 sealos/1234。执行内置 PVE/Ubuntu 准备流程，下载并安装所选 sealos-pro 或 sealos-oss 基础包，执行 info。本地用 cert.sh --mode auto 信任 Cloud HTTPS URL 的浏览器证书，这是每次最终成功报告前的强制门禁；重跑、继续安装、重新检查或只跑增量包时也必须重新执行，不能因为以前执行过而跳过。证书信任成功后再次执行最终 info；如提供增量包，则用 sealos run 执行。随后验证离线镜像、集群健康和 URI 可达性；离线镜像合法前缀为 sealos.hub:5000/ 和从本次 cloudDomain 解析出的 hub.<cloudDomain>/。输出表格报告：Sealos Cloud 登录用户名和登录密码明文展示，下载 URL 签名、token、key、非登录密钥和 URI 内嵌凭据脱敏。永远不要执行 sealos reset。"
+policy:
+  allow_implicit_invocation: true

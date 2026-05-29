@@ -12,3 +12,10 @@
 # path = "skills/.curated/example"
 # ref = "main"
 # dest = "skills/example"
+
+[[skill]]
+name = "sealos-install"
+repo = "git@github.com:labring/sealos-pro.git"
+path = "skills/sealos-install"
+ref = "main"
+dest = "skills/sealos-install"
