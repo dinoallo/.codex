@@ -138,7 +138,8 @@ def select_skills(skills: dict[str, Skill], names: list[str]) -> list[Skill]:
 
 def repo_cache_dir(skill: Skill, cache_root: Path) -> Path:
     digest = hashlib.sha256(skill.repo_url.encode()).hexdigest()[:16]
-    return cache_root / f"{skill.name}-{digest}"
+    slug = re.sub(r"[^A-Za-z0-9_.-]+", "-", skill.repo)
+    return cache_root / f"{slug.strip('-')}-{digest}"
 
 
 def ensure_repo(skill: Skill, cache_root: Path) -> Path:
@@ -215,6 +216,12 @@ def replace_dest(source: Path, dest: Path, force: bool) -> None:
     shutil.copytree(source, dest)
 
 
+def get_repo(skill: Skill, args: argparse.Namespace, repos: dict[str, Path]) -> Path:
+    if skill.repo_url not in repos:
+        repos[skill.repo_url] = ensure_repo(skill, args.cache_dir)
+    return repos[skill.repo_url]
+
+
 def update_skills(args: argparse.Namespace) -> None:
     skills = load_manifest(args.manifest)
     lock = load_lock(args.lock)
@@ -223,8 +230,9 @@ def update_skills(args: argparse.Namespace) -> None:
         print("No third-party skills configured.")
         return
 
+    repos: dict[str, Path] = {}
     for skill in selected:
-        repo_dir = ensure_repo(skill, args.cache_dir)
+        repo_dir = get_repo(skill, args, repos)
         commit = resolve_commit(repo_dir, skill.ref)
         with tempfile.TemporaryDirectory(prefix="skill-vendor-") as temp:
             source = extract_skill(repo_dir, commit, skill.path, Path(temp))
@@ -248,11 +256,12 @@ def sync_skills(args: argparse.Namespace) -> None:
         print("No third-party skills configured.")
         return
 
+    repos: dict[str, Path] = {}
     for skill in selected:
         locked = lock["skills"].get(skill.name)
         if not locked or not locked.get("commit"):
             raise VendorError(f"{skill.name} is not locked; run update first")
-        repo_dir = ensure_repo(skill, args.cache_dir)
+        repo_dir = get_repo(skill, args, repos)
         commit = locked["commit"]
         run(["git", "fetch", "origin", commit], cwd=repo_dir)
         with tempfile.TemporaryDirectory(prefix="skill-vendor-") as temp:
@@ -282,13 +291,14 @@ def verify_skills(args: argparse.Namespace) -> None:
         return
 
     failed = False
+    repos: dict[str, Path] = {}
     for skill in selected:
         locked = lock["skills"].get(skill.name)
         if not locked or not locked.get("commit"):
             print(f"missing lock: {skill.name}", file=sys.stderr)
             failed = True
             continue
-        repo_dir = ensure_repo(skill, args.cache_dir)
+        repo_dir = get_repo(skill, args, repos)
         commit = locked["commit"]
         run(["git", "fetch", "origin", commit], cwd=repo_dir)
         with tempfile.TemporaryDirectory(prefix="skill-vendor-") as temp:

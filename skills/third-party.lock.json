@@ -1,6 +1,42 @@
 {
   "version": 1,
   "skills": {
+    "lark-base": {
+      "repo": "git@github.com:larksuite/cli.git",
+      "path": "skills/lark-base",
+      "ref": "main",
+      "commit": "0a2c3202cb3d71c6d5f914e6fcc13fa6a30037cd"
+    },
+    "lark-doc": {
+      "repo": "git@github.com:larksuite/cli.git",
+      "path": "skills/lark-doc",
+      "ref": "main",
+      "commit": "0a2c3202cb3d71c6d5f914e6fcc13fa6a30037cd"
+    },
+    "lark-drive": {
+      "repo": "git@github.com:larksuite/cli.git",
+      "path": "skills/lark-drive",
+      "ref": "main",
+      "commit": "0a2c3202cb3d71c6d5f914e6fcc13fa6a30037cd"
+    },
+    "lark-shared": {
+      "repo": "git@github.com:larksuite/cli.git",
+      "path": "skills/lark-shared",
+      "ref": "main",
+      "commit": "0a2c3202cb3d71c6d5f914e6fcc13fa6a30037cd"
+    },
+    "lark-task": {
+      "repo": "git@github.com:larksuite/cli.git",
+      "path": "skills/lark-task",
+      "ref": "main",
+      "commit": "0a2c3202cb3d71c6d5f914e6fcc13fa6a30037cd"
+    },
+    "lark-wiki": {
+      "repo": "git@github.com:larksuite/cli.git",
+      "path": "skills/lark-wiki",
+      "ref": "main",
+      "commit": "0a2c3202cb3d71c6d5f914e6fcc13fa6a30037cd"
+    },
     "sealos-install": {
       "repo": "git@github.com:labring/sealos-pro.git",
       "path": "skills/sealos-install",
