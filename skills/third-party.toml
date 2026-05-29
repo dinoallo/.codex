@@ -61,3 +61,10 @@ repo = "git@github.com:larksuite/cli.git"
 path = "skills/lark-wiki"
 ref = "main"
 dest = "skills/lark-wiki"
+
+[[skill]]
+name = "codex-token-usage-dashboard"
+repo = "cuisongliu/codex-token-usage-dashboard"
+path = "skills/codex-token-usage-dashboard"
+ref = "main"
+dest = "skills/codex-token-usage-dashboard"

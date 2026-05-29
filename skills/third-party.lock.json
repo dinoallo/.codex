@@ -1,6 +1,12 @@
 {
   "version": 1,
   "skills": {
+    "codex-token-usage-dashboard": {
+      "repo": "cuisongliu/codex-token-usage-dashboard",
+      "path": "skills/codex-token-usage-dashboard",
+      "ref": "main",
+      "commit": "fd3c8926cf293d086252d5a78d56c3498265e5ce"
+    },
     "lark-base": {
       "repo": "git@github.com:larksuite/cli.git",
       "path": "skills/lark-base",
