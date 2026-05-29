@@ -224,10 +224,16 @@ Do not create, move, or delete tags without explicit user intent.
 
 ## Pushes and Remotes
 
+- Treat pushes as strict workflow operations because they publish local state to a remote.
 - Do not push unless the user asked to push, publish, update a PR branch, or perform an equivalent remote operation.
-- Before pushing, inspect `git remote -v`, `git status --short --branch`, and the upstream relationship.
-- Use plain `git push` only when the current branch tracks the intended upstream. Otherwise ask or use the explicit remote and branch requested by the user.
-- For rewritten history, prefer `git push --force-with-lease` over `--force`, and only when the user explicitly asked for a rewrite that requires it.
+- Before pushing, inspect `git remote -v`, `git status --short --branch`, the current branch, the upstream relationship, and the commits that will be sent. Use `git log --oneline --decorate @{u}..HEAD` when an upstream exists.
+- Confirm the target remote and branch from user intent, the configured upstream, or an explicit refspec. If the target is ambiguous, stop and ask instead of guessing.
+- Use plain `git push` only when the current branch tracks the intended upstream and the ahead commits are exactly the intended commits. Otherwise ask or use the explicit remote and branch requested by the user.
+- Do not use broad refspecs such as `--all`, `--mirror`, or `--tags` unless the user explicitly asked for that exact publication scope. Push individual tags only when the user requested those tags.
+- Prefer `git push --dry-run` before first-time branch publication, explicit refspec pushes, tag pushes, force-with-lease pushes, or any push to a high-risk remote or branch.
+- Do not push commits that are known to have failed required verification unless the user explicitly asks to publish anyway and the final response calls out the failed or skipped checks.
+- For rewritten history, use `git push --force-with-lease` instead of `--force`, and only when the user explicitly asked for a rewrite that requires it. Include the intended remote and branch where practical.
+- If a push is rejected, do not automatically pull, merge, rebase, or force-push to make it succeed. Inspect and report the cause, then proceed only when the next step is clearly requested or safe.
 - Never push to production, deployment, release, or protected branches unless the user explicitly requested that target.
 
 ## Troubleshooting Signing
