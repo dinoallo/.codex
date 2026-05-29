@@ -7,8 +7,14 @@
 !README.*.md
 !prompts/
 !prompts/**
+!scripts/
+!scripts/**
 !skills/
 !skills/**
+
+# Keep script runtime byproducts out of the tracked config set.
+scripts/**/__pycache__/
+scripts/**/*.pyc
 
 # Ignore bundled/system skills shipped with Codex itself.
 skills/.system/

@@ -1,0 +1,14 @@
+# Third-party skills vendored under skills/<name>.
+#
+# Add one [[skill]] block for each external skill you want to track. Run
+# scripts/skill-vendor.py update <name> to copy the source into this repo and
+# record the resolved commit in skills/third-party.lock.json.
+#
+# Example:
+#
+# [[skill]]
+# name = "example"
+# repo = "owner/repo"
+# path = "skills/.curated/example"
+# ref = "main"
+# dest = "skills/example"
