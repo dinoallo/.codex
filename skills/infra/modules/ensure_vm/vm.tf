@@ -158,7 +158,7 @@ resource "terraform_data" "control_ssh_key_delivery" {
       "for host in ${join(" ", proxmox_vm_qemu.vm[*].default_ipv4_address)}; do for attempt in 1 2 3 4 5; do ssh-keyscan -H \"$host\" >> ~/.ssh/known_hosts 2>/dev/null && break || sleep 3; done; done",
       "touch ~/.ssh/config",
       "sed -i '/# BEGIN infra-control-key/,/# END infra-control-key/d' ~/.ssh/config",
-      "printf '%s\\n' '# BEGIN infra-control-key' 'Host *' '  IdentityFile ~/.ssh/id_ed25519_tofu' '  IdentitiesOnly yes' '  UserKnownHostsFile ~/.ssh/known_hosts' '# END infra-control-key' >> ~/.ssh/config",
+      "printf '%s\\n' '# BEGIN infra-control-key' 'Host *' '  IdentityFile ~/.ssh/id_ed25519_tofu' '  UserKnownHostsFile ~/.ssh/known_hosts' '# END infra-control-key' >> ~/.ssh/config",
       "chmod 0600 ~/.ssh/config",
       "rm -f /tmp/infra_control_id_ed25519 /tmp/infra_control_id_ed25519.pub"
     ]
