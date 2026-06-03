@@ -1,0 +1,4 @@
+interface:
+  display_name: "GitHub Actions Debugger"
+  short_description: "Fix CI failures from gh logs"
+  default_prompt: "Use $github-actions-debugger to inspect GitHub Actions failures with gh CLI and fix the code based on failed logs."
