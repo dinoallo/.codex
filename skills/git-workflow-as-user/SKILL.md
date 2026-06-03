@@ -27,6 +27,16 @@ Commands that update `.git` metadata, such as `git add`, `git commit`, `git tag`
 
 Do not use elevated permissions to bypass safety rules. Destructive or history-changing commands still require explicit user intent.
 
+## Git Remote Network Access
+
+Commands that contact remotes, including `git push`, `git push --dry-run`, `git fetch`, `git pull`, and `git ls-remote`, may fail in network-restricted sandboxes even when the Git workflow is otherwise correct.
+
+Keep local preflight commands inside the sandbox whenever possible: `git remote -v`, `git status --short --branch`, branch/upstream inspection, and local commit range checks do not need network access when the relevant refs already exist.
+
+After explicit user intent and local preflight checks confirm the remote operation, run the first command that needs remote network access with sandbox escalation instead of first attempting it inside the restricted sandbox. The approval request must name the exact remote operation, target remote, target branch or refspec, and whether it is a dry-run or an actual publication.
+
+Do not use network escalation to bypass Git safety rules. If a remote command fails because of authentication, authorization, protected-branch policy, non-fast-forward rejection, or remote state drift, inspect and report the cause instead of changing credentials, pulling, rebasing, merging, or force-pushing unless the user clearly asks for that next step.
+
 ## User Approval Prompts
 
 Some Git operations may pause until the user approves a sandbox escalation. When asking for approval, state the specific purpose and keep any suggested persistent approval narrowly scoped.
@@ -38,6 +48,8 @@ For repeated routine Git metadata writes, suggest a prefix rule only when it mat
 - `["git", "tag"]` only when the user has asked to create tags.
 
 Tell the user that the approval UI may offer a persistent/default approval option for the suggested prefix. Choosing that option can avoid repeated prompts for the same class of Git command in later steps.
+
+For Git remote network commands, do not suggest a persistent prefix rule by default. If the user explicitly wants fewer approval prompts for repeated non-force pushes to the same trusted target, suggest the narrowest exact push prefix that matches the requested target, such as `["git", "push", "origin", "my-branch"]`. Do not suggest persistent push approval for `--force`, `--force-with-lease`, `--mirror`, `--all`, branch deletion, or ambiguous tag publication.
 
 Persistent approval only removes the sandbox prompt. It does not replace the need for explicit user intent before remote, destructive, or history-changing actions such as push, force-push, reset, clean, branch deletion, rebase, amend, or tag movement. Do not request broad prefixes such as `["git"]`, and do not suggest persistent approval for destructive commands.
 
@@ -231,6 +243,8 @@ Do not create, move, or delete tags without explicit user intent.
 - Use plain `git push` only when the current branch tracks the intended upstream and the ahead commits are exactly the intended commits. Otherwise ask or use the explicit remote and branch requested by the user.
 - Do not use broad refspecs such as `--all`, `--mirror`, or `--tags` unless the user explicitly asked for that exact publication scope. Push individual tags only when the user requested those tags.
 - Prefer `git push --dry-run` before first-time branch publication, explicit refspec pushes, tag pushes, force-with-lease pushes, or any push to a high-risk remote or branch.
+- Because `git push --dry-run` and `git push` contact the remote, run them with sandbox escalation after the local preflight confirms the target. Do not intentionally run the first remote-contacting push command inside a network-restricted sandbox just to observe the expected network failure.
+- A successful dry-run does not publish anything. When the user asked to push and the dry-run confirms the intended target, run the actual push as a separate command with the same confirmed remote and branch/refspec.
 - Do not push commits that are known to have failed required verification unless the user explicitly asks to publish anyway and the final response calls out the failed or skipped checks.
 - For rewritten history, use `git push --force-with-lease` instead of `--force`, and only when the user explicitly asked for a rewrite that requires it. Include the intended remote and branch where practical.
 - If a push is rejected, do not automatically pull, merge, rebase, or force-push to make it succeed. Inspect and report the cause, then proceed only when the next step is clearly requested or safe.
