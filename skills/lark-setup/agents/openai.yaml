@@ -1,0 +1,4 @@
+interface:
+  display_name: "Lark Setup"
+  short_description: "Bootstrap lark-cli and Lark skills"
+  default_prompt: "Use $lark-setup to initialize lark-cli, sync Lark skills, and prepare authentication for first use."
