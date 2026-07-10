@@ -68,3 +68,10 @@ repo = "cuisongliu/codex-token-usage-dashboard"
 path = "skills/codex-token-usage-dashboard"
 ref = "main"
 dest = "skills/codex-token-usage-dashboard"
+
+[[skill]]
+name = "write-cluster-image"
+repo = "labring-sigs/write-cluster-image-skill"
+path = "."
+ref = "main"
+dest = "skills/write-cluster-image"

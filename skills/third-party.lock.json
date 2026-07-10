@@ -48,6 +48,12 @@
       "path": "skills/sealos-install",
       "ref": "main",
       "commit": "7f9e8edc9ee9714573baaaea37a1b4a7337bdf11"
+    },
+    "write-cluster-image": {
+      "repo": "labring-sigs/write-cluster-image-skill",
+      "path": ".",
+      "ref": "main",
+      "commit": "4481773412237ff26bf1af8d8890db10e2220b40"
     }
   }
 }

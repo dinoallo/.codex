@@ -1,0 +1,4 @@
+interface:
+  display_name: "Write Cluster Image"
+  short_description: "Create or review Sealos cluster image deploy files"
+  default_prompt: "Use $write-cluster-image to create, revise, or review Sealos cluster image deploy files."
