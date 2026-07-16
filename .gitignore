@@ -5,6 +5,8 @@
 !AGENTS.md
 !README.md
 !README.*.md
+!docs/
+!docs/**
 !prompts/
 !prompts/**
 !scripts/

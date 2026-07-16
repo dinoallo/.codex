@@ -1,0 +1,24 @@
+# Copy to $HOME/.codex/private/gh-auth-profiles.toml and adjust owners, repos,
+# hosts, and encrypted secret file names for this machine.
+#
+# Do not store real tokens in this file. Store each fine-grained PAT in a
+# SOPS-encrypted YAML file with this plaintext shape before saving:
+#
+#   token: github_pat_xxx
+
+[profiles.personal]
+host = "github.com"
+token_command = "sops decrypt --extract '[\"token\"]' \"$HOME/.codex/private/github-personal-fgpat.sops.yaml\""
+
+[profiles.work]
+host = "github.com"
+token_command = "sops decrypt --extract '[\"token\"]' \"$HOME/.codex/private/github-work-fgpat.sops.yaml\""
+
+[profiles.enterprise]
+host = "github.example.com"
+token_command = "sops decrypt --extract '[\"token\"]' \"$HOME/.codex/private/github-enterprise-fgpat.sops.yaml\""
+
+[rules]
+"github.com/your-user/*" = "personal"
+"github.com/your-org/*" = "work"
+"github.example.com/platform/*" = "enterprise"

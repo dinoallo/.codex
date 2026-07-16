@@ -17,6 +17,7 @@ Codex Control Deck is my personal `.codex` dotfiles repo: the hand-tuned layer o
 | Path | Purpose |
 | --- | --- |
 | `AGENTS.md` | Personal global working rules for agents operating under the Codex config tree. |
+| `docs/` | Human-facing notes for sharing this deck, including the skill catalog and safe auth setup examples. |
 | `prompts/` | Custom prompt files, currently focused on the OPSX/OpenSpec change workflow. |
 | `skills/` | User-maintained skills that extend agent behavior for Git, README writing, GitHub Actions, and Proxmox infrastructure workflows. |
 | `scripts/` | Local maintenance helpers for repeatable dotfiles operations. |
@@ -29,6 +30,10 @@ Codex Control Deck is my personal `.codex` dotfiles repo: the hand-tuned layer o
 |-- AGENTS.md
 |-- README.md
 |-- README.zh-CN.md
+|-- docs/
+|   |-- gh-auth-profiles.example.toml
+|   |-- skills.md
+|   `-- skills.zh-CN.md
 |-- prompts/
 |   `-- opsx-*.md
 |-- scripts/
@@ -42,6 +47,21 @@ Codex Control Deck is my personal `.codex` dotfiles repo: the hand-tuned layer o
 |   `-- write-readmes/
 `-- .gitignore
 ```
+
+## Skills
+
+Skills are the main extension point in this deck. Each skill lives under
+`skills/<name>/` and uses `SKILL.md` for agent-facing instructions plus
+optional `agents/openai.yaml` UI metadata.
+
+See [docs/skills.md](docs/skills.md) for the skill catalog, maintenance
+conventions, and the recommended GitHub auth profile setup. The sanitized
+example profile at [docs/gh-auth-profiles.example.toml](docs/gh-auth-profiles.example.toml)
+shows how to route `gh` CLI commands through SOPS-encrypted fine-grained PATs.
+
+Do not add README files inside individual skill folders. Put human-facing
+overview material in `docs/`, and keep detailed agent instructions in each
+skill's `SKILL.md` or `references/` files.
 
 ## Third-Party Skills
 

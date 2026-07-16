@@ -17,6 +17,7 @@ Codex Control Deck 是我的个人 `.codex` dotfiles 仓库：这里放着手工
 | 路径 | 用途 |
 | --- | --- |
 | `AGENTS.md` | Codex 配置树下 agent 的个人全局工作规则。 |
+| `docs/` | 分享这套配置时给人看的说明，包括 skill 目录和安全 auth 配置示例。 |
 | `prompts/` | 自定义 prompt 文件，目前主要服务于 OPSX/OpenSpec 变更工作流。 |
 | `skills/` | 用户维护的 skills，用于扩展 Git、README 编写、GitHub Actions 和 Proxmox 基础设施等行为。 |
 | `scripts/` | 本地维护脚本，用来让 dotfiles 操作可重复。 |
@@ -29,6 +30,10 @@ Codex Control Deck 是我的个人 `.codex` dotfiles 仓库：这里放着手工
 |-- AGENTS.md
 |-- README.md
 |-- README.zh-CN.md
+|-- docs/
+|   |-- gh-auth-profiles.example.toml
+|   |-- skills.md
+|   `-- skills.zh-CN.md
 |-- prompts/
 |   `-- opsx-*.md
 |-- scripts/
@@ -42,6 +47,20 @@ Codex Control Deck 是我的个人 `.codex` dotfiles 仓库：这里放着手工
 |   `-- write-readmes/
 `-- .gitignore
 ```
+
+## Skills
+
+Skills 是这套配置的主要扩展点。每个 skill 位于 `skills/<name>/`，用
+`SKILL.md` 保存 agent-facing 指令，并可选配 `agents/openai.yaml` 作为 UI
+元数据。
+
+查看 [docs/skills.zh-CN.md](docs/skills.zh-CN.md) 了解 skill 目录、维护约定
+和推荐的 GitHub auth profile 配置。可提交的脱敏示例
+[docs/gh-auth-profiles.example.toml](docs/gh-auth-profiles.example.toml) 展示了如何
+把 `gh` CLI 命令路由到由 SOPS 加密的 fine-grained PAT。
+
+不要在单个 skill 目录里添加 README。给人看的总览材料放在 `docs/`；详细的
+agent 指令继续放在各 skill 的 `SKILL.md` 或 `references/` 文件中。
 
 ## 第三方 Skills
 
