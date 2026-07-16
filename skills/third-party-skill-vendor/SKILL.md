@@ -62,3 +62,8 @@ git diff -- skills/third-party.toml skills/third-party.lock.json skills/<name>
   workflow rather than running it directly as the installation.
 - If a network command fails because of sandbox restrictions, rerun it with the
   required escalation instead of switching to an untracked install path.
+- If a GitHub source fetch fails due to authentication, token scope, SAML SSO,
+  private repository access, missing organization membership, or rate limits,
+  report the failing command and the exact permission or user action needed.
+  Do not change credentials, add tokens, switch sources, or vendor from an
+  unverified mirror unless the user explicitly asks.

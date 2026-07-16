@@ -18,6 +18,7 @@ Use `gh` CLI to inspect GitHub Actions and PR check failures before changing cod
 2. Confirm GitHub access and repository context:
    - `gh auth status`
    - `gh repo view --json nameWithOwner,url`
+   - If access fails, report the failing command, the missing GitHub capability, and the next permission step for the user, such as `gh auth login`, `gh auth refresh -s repo`, `gh auth refresh -s workflow`, org SSO authorization, or repository Actions read access.
 3. Prefer PR checks when the branch has an associated PR:
    - `gh pr view --json number,url,headRefName,headRefOid,statusCheckRollup`
    - `gh pr checks`
@@ -45,6 +46,7 @@ Use `gh` CLI to inspect GitHub Actions and PR check failures before changing cod
 - Do not push commits or update PRs unless the user asks.
 - Do not install dependencies, access private systems, or use paid services without explicit user intent.
 - If `gh` is unauthenticated, missing, or blocked by sandbox/network restrictions, report the blocker and the command that failed.
+- If a GitHub command fails due to auth, OAuth scope, SAML SSO, org policy, missing repo role, Actions access, Checks access, or log visibility, stop and tell the user exactly what permission or approval is needed. Do not refresh scopes, change credentials, rerun workflows, or request elevated GitHub access unless the user explicitly asks.
 - If logs point to secrets, tokens, or private URLs, avoid pasting sensitive values in the response.
 
 ## Common Commands

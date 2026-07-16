@@ -20,6 +20,7 @@ Use `gh` CLI to create a pull request from the current repository while preservi
    - `gh auth status`
    - `gh repo view --json nameWithOwner,url,defaultBranchRef`
    - Treat missing `gh`, missing auth, permission failures, and sandbox/network failures as blockers.
+   - If access fails, report the failing command, the missing GitHub capability, and the next permission step for the user, such as `gh auth login`, `gh auth refresh -s repo`, `gh auth refresh -s read:org`, org SSO authorization, or repo write access.
 3. Identify the PR branch and base:
    - Use the current branch as head unless the user named another branch.
    - Use the user's requested base branch when provided.
@@ -54,6 +55,7 @@ Use `gh` CLI to create a pull request from the current repository while preservi
 - Do not let `gh pr create` prompt for title/body, fork choice, or push target; pass explicit flags.
 - Do not add reviewers, labels, projects, milestones, or assignees unless the user asks or the repository convention is already clear.
 - If project assignment fails due to missing `project` scope, report `gh auth refresh -s project` as the required auth step instead of changing auth automatically.
+- If any GitHub operation fails due to auth, OAuth scope, SAML SSO, org policy, missing repo role, fork restriction, or branch protection, stop and tell the user exactly what permission or approval is needed. Do not attempt to change credentials, refresh scopes, fork, or bypass policy unless the user explicitly asks.
 - Avoid pasting secrets or sensitive internal URLs from PR templates, commit messages, or command output.
 
 ## Command Patterns

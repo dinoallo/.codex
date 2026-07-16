@@ -1,0 +1,4 @@
+interface:
+  display_name: "Git Tag as User"
+  short_description: "Create and verify signed Git tags"
+  default_prompt: "Use $git-tag-as-user to create and verify a signed Git tag with my configured identity."

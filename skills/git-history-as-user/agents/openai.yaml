@@ -1,0 +1,4 @@
+interface:
+  display_name: "Git History as User"
+  short_description: "Handle amend, rebase, and merges"
+  default_prompt: "Use $git-history-as-user to amend, rebase, merge, or rewrite Git history with explicit safeguards."

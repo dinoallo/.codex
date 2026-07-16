@@ -1,0 +1,4 @@
+interface:
+  display_name: "Git Signing Troubleshooter"
+  short_description: "Diagnose Git commit signing failures"
+  default_prompt: "Use $git-signing-troubleshooter to diagnose why Git commit or tag signing is failing without changing my config."

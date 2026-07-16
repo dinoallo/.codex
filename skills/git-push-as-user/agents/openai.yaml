@@ -1,0 +1,4 @@
+interface:
+  display_name: "Git Push as User"
+  short_description: "Push Git refs with remote checks"
+  default_prompt: "Use $git-push-as-user to publish the current branch after local preflight and dry-run checks."

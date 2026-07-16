@@ -1,0 +1,4 @@
+interface:
+  display_name: "Git Commit as User"
+  short_description: "Create signed user commits safely"
+  default_prompt: "Use $git-commit-as-user to stage the intended changes, create a signed commit, and verify it."
