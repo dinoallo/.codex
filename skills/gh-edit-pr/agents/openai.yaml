@@ -1,0 +1,4 @@
+interface:
+  display_name: "GH Edit PR"
+  short_description: "Edit existing GitHub PRs with gh CLI"
+  default_prompt: "Use $gh-edit-pr to update the title, body, reviewers, labels, or draft state of an existing GitHub pull request with gh CLI."
