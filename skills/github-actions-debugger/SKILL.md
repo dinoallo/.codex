@@ -16,8 +16,10 @@ Use `gh` CLI to inspect GitHub Actions and PR check failures before changing cod
    - preserve unrelated user changes.
    - note the current branch and whether local changes may affect reproduction.
 2. Confirm GitHub access and repository context:
+   - If the repository or organization may need a non-default GitHub identity, token, SSO authorization, GHES host, or GitHub App installation token, use `gh-auth-profile` to select the profile first.
    - `gh auth status`
    - `gh repo view --json nameWithOwner,url`
+   - When a profile is selected, run every `gh` command in this workflow with that profile's one-command token environment.
    - If access fails, report the failing command, the missing GitHub capability, and the next permission step for the user, such as `gh auth login`, `gh auth refresh -s repo`, `gh auth refresh -s workflow`, org SSO authorization, or repository Actions read access.
 3. Prefer PR checks when the branch has an associated PR:
    - `gh pr view --json number,url,headRefName,headRefOid,statusCheckRollup`
@@ -46,6 +48,7 @@ Use `gh` CLI to inspect GitHub Actions and PR check failures before changing cod
 - Do not push commits or update PRs unless the user asks.
 - Do not install dependencies, access private systems, or use paid services without explicit user intent.
 - If `gh` is unauthenticated, missing, or blocked by sandbox/network restrictions, report the blocker and the command that failed.
+- Do not use `gh auth switch` to change the active account. Use `gh-auth-profile` when repository-specific credentials are needed.
 - If a GitHub command fails due to auth, OAuth scope, SAML SSO, org policy, missing repo role, Actions access, Checks access, or log visibility, stop and tell the user exactly what permission or approval is needed. Do not refresh scopes, change credentials, rerun workflows, or request elevated GitHub access unless the user explicitly asks.
 - If logs point to secrets, tokens, or private URLs, avoid pasting sensitive values in the response.
 

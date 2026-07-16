@@ -1,0 +1,4 @@
+interface:
+  display_name: "GH Auth Profile"
+  short_description: "Route gh CLI auth per repository"
+  default_prompt: "Use $gh-auth-profile to configure repository-specific GitHub CLI auth profiles safely."

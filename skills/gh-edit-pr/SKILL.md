@@ -16,8 +16,10 @@ Use `gh` CLI to update an existing pull request without changing local commits, 
    - If no selector is provided, use the PR for the current branch only when that is unambiguous.
    - Inspect local context with `git status --short --branch` and `git branch --show-current` when relying on the current branch.
 2. Confirm GitHub CLI access and repository context:
+   - If the repository or organization may need a non-default GitHub identity, token, SSO authorization, GHES host, or GitHub App installation token, use `gh-auth-profile` to select the profile first.
    - `gh auth status`
    - `gh repo view --json nameWithOwner,url,defaultBranchRef`
+   - When a profile is selected, run every `gh` command in this workflow with that profile's one-command token environment.
    - Treat missing `gh`, missing auth, permission failures, and sandbox/network failures as blockers.
    - If access fails, report the failing command, the missing GitHub capability, and the next permission step for the user, such as `gh auth login`, `gh auth refresh -s repo`, `gh auth refresh -s read:org`, org SSO authorization, or repo write access.
 3. Snapshot the PR before editing:
@@ -48,6 +50,7 @@ Use `gh` CLI to update an existing pull request without changing local commits, 
 - Do not merge PRs from this skill.
 - Do not commit, amend, rebase, push, delete branches, or rewrite Git history unless the user explicitly asks for that separate Git operation.
 - Do not change the PR base branch, close a PR, reopen a PR, convert ready/draft state, or delete a branch unless the user explicitly requested that specific state change.
+- Do not use `gh auth switch` to change the active account. Use `gh-auth-profile` when repository-specific credentials are needed.
 - Do not add or remove reviewers, labels, projects, milestones, or assignees unless the user asks or the repository convention is already clear.
 - If project edits fail due to missing `project` scope, report `gh auth refresh -s project` as the required auth step instead of changing auth automatically.
 - If any GitHub operation fails due to auth, OAuth scope, SAML SSO, org policy, missing repo role, review/team visibility, branch protection, or project permissions, stop and tell the user exactly what permission or approval is needed. Do not attempt to change credentials, refresh scopes, or bypass policy unless the user explicitly asks.

@@ -17,8 +17,10 @@ Use `gh` CLI to create a pull request from the current repository while preservi
    - `git remote -v`
    - Preserve unrelated dirty files. If uncommitted changes exist, state that they are not part of the PR unless the user explicitly asks to commit them first.
 2. Confirm GitHub CLI access and repository context:
+   - If the repository or organization may need a non-default GitHub identity, token, SSO authorization, GHES host, or GitHub App installation token, use `gh-auth-profile` to select the profile first.
    - `gh auth status`
    - `gh repo view --json nameWithOwner,url,defaultBranchRef`
+   - When a profile is selected, run every `gh` command in this workflow with that profile's one-command token environment.
    - Treat missing `gh`, missing auth, permission failures, and sandbox/network failures as blockers.
    - If access fails, report the failing command, the missing GitHub capability, and the next permission step for the user, such as `gh auth login`, `gh auth refresh -s repo`, `gh auth refresh -s read:org`, org SSO authorization, or repo write access.
 3. Identify the PR branch and base:
@@ -53,6 +55,7 @@ Use `gh` CLI to create a pull request from the current repository while preservi
 - Do not commit, amend, rebase, merge, or push unless the user explicitly asks for that Git operation. If those operations are needed, follow the repository's Git workflow rules first.
 - Do not create duplicate PRs for the same head branch.
 - Do not let `gh pr create` prompt for title/body, fork choice, or push target; pass explicit flags.
+- Do not use `gh auth switch` to change the active account. Use `gh-auth-profile` when repository-specific credentials are needed.
 - Do not add reviewers, labels, projects, milestones, or assignees unless the user asks or the repository convention is already clear.
 - If project assignment fails due to missing `project` scope, report `gh auth refresh -s project` as the required auth step instead of changing auth automatically.
 - If any GitHub operation fails due to auth, OAuth scope, SAML SSO, org policy, missing repo role, fork restriction, or branch protection, stop and tell the user exactly what permission or approval is needed. Do not attempt to change credentials, refresh scopes, fork, or bypass policy unless the user explicitly asks.

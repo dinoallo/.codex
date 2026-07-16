@@ -44,6 +44,8 @@ Name the operation in the approval request: dry-run or actual push, remote, bran
 
 For GitHub remotes, if dry-run or push fails due to authentication, token scope, SAML SSO, missing repository role, branch protection, required reviews/checks, deploy key restrictions, or protected tag rules, report the failing command and the exact permission or maintainer action needed. Do not change credentials, reconfigure remotes, bypass protections, or force-push unless the user explicitly asks.
 
+`gh-auth-profile` applies to `gh` CLI API commands, not to Git transport by default. Do not assume `GH_TOKEN` will authenticate SSH pushes. If a push uses HTTPS token credentials, treat that as Git credential-helper or remote configuration work rather than silently switching the `gh` profile.
+
 ## Guardrails
 
 - Do not push unless the user asked to push, publish, update a PR branch, or perform an equivalent remote operation.
