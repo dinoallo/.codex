@@ -129,7 +129,8 @@ Alternative `token_command` providers such as Vault or 1Password are acceptable 
 
 Determine the target key before selecting a profile:
 
-- Prefer `gh repo view --json nameWithOwner,url` when a safe read-only `gh` command can run with existing context.
+- When this skill is used as a preflight gate for another `gh` skill, infer the target from the user request, explicit `--repo` or URL arguments, and `git remote -v` before any bare `gh` command.
+- Use `gh repo view --json nameWithOwner,url` only after a profile is selected, or after the caller has already determined that bare `gh` is allowed for the target.
 - Otherwise parse `git remote -v` or a user-provided PR/repo URL.
 - Normalize targets to `host/owner/repo`, for example `github.com/dinoallo/.codex`.
 - For commands outside a local repo, require the target repository or host to be explicit before choosing a profile.
