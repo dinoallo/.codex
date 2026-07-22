@@ -1,0 +1,4 @@
+interface:
+  display_name: "Git Review Worktree"
+  short_description: "Prepare isolated Git review worktrees"
+  default_prompt: "Use $git-review-worktree to prepare an isolated worktree for reviewing a commit, branch, or GitHub PR."
