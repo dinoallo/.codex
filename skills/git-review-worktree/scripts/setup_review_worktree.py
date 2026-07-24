@@ -51,6 +51,13 @@ def run(
     return (completed.stdout or "").strip()
 
 
+def run_optional(cmd: Sequence[str]) -> str | None:
+    try:
+        return run(cmd)
+    except ReviewSetupError:
+        return None
+
+
 def shell_quote(value: str) -> str:
     if re.fullmatch(r"[A-Za-z0-9_@%+=:,./-]+", value):
         return value
@@ -100,25 +107,50 @@ def unique_path(path: Path) -> Path:
     raise ReviewSetupError(f"Could not find an unused worktree path near {path}")
 
 
-def ensure_worktrees_excluded(repo: Path, *, dry_run: bool) -> None:
-    git_dir = run(["git", "-C", str(repo), "rev-parse", "--git-common-dir"])
+def nearest_existing_parent(path: Path) -> Path | None:
+    current = path if path.exists() else path.parent
+    while True:
+        if current.exists():
+            return current
+        if current.parent == current:
+            return None
+        current = current.parent
+
+
+def ensure_worktree_base_excluded(worktree_base: Path, *, dry_run: bool) -> None:
+    start = nearest_existing_parent(worktree_base)
+    if start is None:
+        return
+
+    root = run_optional(["git", "-C", str(start), "rev-parse", "--show-toplevel"])
+    if not root:
+        return
+
+    root_path = Path(root).resolve()
+    resolved_base = worktree_base.resolve()
+    try:
+        exclude_entry = resolved_base.relative_to(root_path).as_posix().rstrip("/") + "/"
+    except ValueError:
+        return
+
+    git_dir = run(["git", "-C", str(root_path), "rev-parse", "--git-common-dir"])
 
     git_common_dir = Path(git_dir)
     if not git_common_dir.is_absolute():
-        git_common_dir = (repo / git_common_dir).resolve()
+        git_common_dir = (root_path / git_common_dir).resolve()
     exclude_path = git_common_dir / "info" / "exclude"
     if dry_run:
-        print(f"+ ensure .worktrees/ is listed in {exclude_path}", file=sys.stderr)
+        print(f"+ ensure {exclude_entry} is listed in {exclude_path}", file=sys.stderr)
         return
 
     exclude_path.parent.mkdir(parents=True, exist_ok=True)
     existing = exclude_path.read_text(encoding="utf-8") if exclude_path.exists() else ""
-    if ".worktrees/" not in {line.strip() for line in existing.splitlines()}:
-        print(f"+ append .worktrees/ to {exclude_path}", file=sys.stderr)
+    if exclude_entry not in {line.strip() for line in existing.splitlines()}:
+        print(f"+ append {exclude_entry} to {exclude_path}", file=sys.stderr)
         with exclude_path.open("a", encoding="utf-8") as handle:
             if existing and not existing.endswith("\n"):
                 handle.write("\n")
-            handle.write(".worktrees/\n")
+            handle.write(f"{exclude_entry}\n")
 
 
 def resolve_ref(repo: Path, ref: str, *, dry_run: bool) -> str:
@@ -160,11 +192,14 @@ def remote_url(repo: Path, remote: str, *, dry_run: bool) -> str:
     return run(["git", "-C", str(repo), "remote", "get-url", remote])
 
 
-def default_worktree_base(repo: Path) -> Path:
-    return repo / ".worktrees"
+def default_worktree_base(args: argparse.Namespace) -> Path:
+    root = Path(args.worktree_root).expanduser().resolve() if args.worktree_root else Path.cwd().resolve()
+    return root / ".worktrees"
 
 
 def add_worktree(repo: Path, target: str, path: Path, *, dry_run: bool) -> None:
+    if not dry_run:
+        path.parent.mkdir(parents=True, exist_ok=True)
     run(["git", "-C", str(repo), "worktree", "add", "--detach", str(path), target], dry_run=dry_run, capture=False)
 
 
@@ -172,19 +207,22 @@ def setup_ref(args: argparse.Namespace) -> dict[str, str]:
     repo = infer_repo_path(args.repo_path, dry_run=args.dry_run)
     sha = resolve_ref(repo, args.ref, dry_run=args.dry_run)
     short_sha = sha[:12] if sha != "DRYRUN" else "dryrun"
+    worktree_base = default_worktree_base(args)
     worktree_path = (
         Path(args.worktree_path).expanduser().resolve()
         if args.worktree_path
-        else unique_path(default_worktree_base(repo) / f"review-{slugify(args.ref)}-{short_sha}")
+        else unique_path(worktree_base / f"review-{slugify(args.ref)}-{short_sha}")
     )
 
-    ensure_worktrees_excluded(repo, dry_run=args.dry_run)
+    if not args.worktree_path:
+        ensure_worktree_base_excluded(worktree_base, dry_run=args.dry_run)
     add_worktree(repo, sha, worktree_path, dry_run=args.dry_run)
     return {
         "mode": "ref",
         "repo": str(repo),
         "ref": args.ref,
         "commit": sha,
+        "worktree_root": str(worktree_base.parent if not args.worktree_path else worktree_path.parent),
         "worktree_path": str(worktree_path),
     }
 
@@ -245,13 +283,15 @@ def setup_pr(args: argparse.Namespace) -> dict[str, object]:
     head_ref = str(pr.get("headRefName") or f"pr-{pr_number}")
     head_oid = str(pr.get("headRefOid") or "")
     short_sha = head_oid[:12] if head_oid and head_oid != "DRYRUN" else "dryrun"
+    worktree_base = default_worktree_base(args)
     worktree_path = (
         Path(args.worktree_path).expanduser().resolve()
         if args.worktree_path
-        else unique_path(default_worktree_base(repo) / f"pr-{pr_number}-{slugify(head_ref)}-{short_sha}")
+        else unique_path(worktree_base / f"pr-{pr_number}-{slugify(head_ref)}-{short_sha}")
     )
 
-    ensure_worktrees_excluded(repo, dry_run=args.dry_run)
+    if not args.worktree_path:
+        ensure_worktree_base_excluded(worktree_base, dry_run=args.dry_run)
     add_worktree(repo, local_ref, worktree_path, dry_run=args.dry_run)
     return {
         "mode": "pr",
@@ -260,6 +300,7 @@ def setup_pr(args: argparse.Namespace) -> dict[str, object]:
         "remote": selected_remote,
         "pr": pr,
         "local_ref": local_ref,
+        "worktree_root": str(worktree_base.parent if not args.worktree_path else worktree_path.parent),
         "worktree_path": str(worktree_path),
     }
 
@@ -287,6 +328,10 @@ def build_parser() -> argparse.ArgumentParser:
 
 def add_common_args(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--repo-path", help="Existing local repository path. Defaults to current Git repo.")
+    parser.add_argument(
+        "--worktree-root",
+        help="Directory that contains the default .worktrees folder. Defaults to the current directory.",
+    )
     parser.add_argument("--worktree-path", help="Explicit output worktree path.")
     parser.add_argument("--dry-run", action="store_true", help="Print commands without making changes.")
 

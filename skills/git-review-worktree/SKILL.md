@@ -7,7 +7,7 @@ description: Prepare isolated Git worktrees for code review setup. Use when Code
 
 ## Overview
 
-Prepare a separate worktree for review work while preserving the user's current checkout and unrelated local changes. Prefer detached worktrees under `.worktrees/` and use only repositories the user has provided or explicitly approved.
+Prepare a separate worktree for review work while preserving the user's current checkout and unrelated local changes. Prefer detached worktrees under the user's current directory at `.worktrees/` and use only repositories the user has provided or explicitly approved.
 
 ## Core Rules
 
@@ -15,7 +15,8 @@ Prepare a separate worktree for review work while preserving the user's current 
 - If no local repository is available, stop and ask the user for a repo path or explicit permission to clone. Do not clone automatically.
 - Do not switch branches, reset, clean, merge, rebase, commit, push, or edit the user's primary worktree.
 - Create review worktrees detached by default to avoid branch name collisions and "already checked out" failures.
-- Place default review worktrees under `<repo>/.worktrees/` and add `.worktrees/` to `<repo>/.git/info/exclude`, not project `.gitignore`.
+- Place default review worktrees under `<cwd>/.worktrees/`, where `<cwd>` is the directory where Codex was invoked or where the setup script is run.
+- Add the relative `.worktrees/` path to the local `.git/info/exclude` for the Git repository that contains `<cwd>` when one exists. Do not modify project `.gitignore`.
 - Treat network, GitHub auth, missing `gh`, missing remotes, and inaccessible PRs as blockers. Report the failing command and the user action needed.
 
 ## Preferred Tool
@@ -30,7 +31,9 @@ python3 <skill-dir>/scripts/setup_review_worktree.py ref --repo-path <repo> --re
 python3 <skill-dir>/scripts/setup_review_worktree.py pr --repo-path <repo> --pr <number-or-url> --github-repo <OWNER/REPO> --remote <remote>
 ```
 
-Use `--dry-run` first when the target ref, remote, or path is uncertain; it still performs read-only local Git validation but skips writes, fetches, and `gh` network access. Use `--worktree-path <path>` only when the user requested a specific location.
+Run the script from the user's current working directory so the default output is `<cwd>/.worktrees/`. Use `--worktree-root <dir>` to make another directory contain `.worktrees/`, and use `--worktree-path <path>` only when the user requested an exact worktree path.
+
+Use `--dry-run` first when the target ref, remote, or path is uncertain; it still performs read-only local Git validation but skips writes, fetches, and `gh` network access.
 
 ## Ordinary Ref Review
 
@@ -40,7 +43,7 @@ Use `--dry-run` first when the target ref, remote, or path is uncertain; it stil
    - If neither works, ask for a local repo path or clone approval.
 2. Resolve the requested commit, branch, tag, or ref with `git rev-parse --verify <ref>^{commit}`.
 3. Create a detached worktree for that commit:
-   - Default path: `<repo>/.worktrees/review-<ref-slug>-<short-sha>`.
+   - Default path: `<cwd>/.worktrees/review-<ref-slug>-<short-sha>`.
    - Command pattern: `git -C <repo> worktree add --detach <path> <sha>`.
 4. Report the worktree path and resolved commit.
 
@@ -58,7 +61,7 @@ Use `--dry-run` first when the target ref, remote, or path is uncertain; it stil
 4. Fetch the PR head from the chosen remote into a local review ref:
    - Command pattern: `git -C <repo> fetch <remote> refs/pull/<pr>/head:refs/review-worktree/pr-<pr>`.
    - This GitHub pull ref works for typical fork PRs against the base repository.
-5. Create a detached worktree at `<repo>/.worktrees/pr-<pr>-<head-slug>-<short-sha>`.
+5. Create a detached worktree at `<cwd>/.worktrees/pr-<pr>-<head-slug>-<short-sha>`.
 6. Report the PR URL, title, base/head refs, worktree path, and resolved commit.
 
 ## Manual Fallback
@@ -68,7 +71,8 @@ Use manual commands only when the script is unsuitable for the local environment
 ```bash
 git -C <repo> rev-parse --show-toplevel
 git -C <repo> rev-parse --verify <ref>^{commit}
-git -C <repo> worktree add --detach <repo>/.worktrees/review-<slug> <sha>
+mkdir -p "$PWD/.worktrees"
+git -C <repo> worktree add --detach "$PWD/.worktrees/review-<slug>" <sha>
 ```
 
 For PRs:
@@ -76,7 +80,8 @@ For PRs:
 ```bash
 gh pr view <pr> -R <OWNER/REPO> --json number,url,title,headRefName,headRefOid,baseRefName,isCrossRepository
 git -C <repo> fetch <remote> refs/pull/<pr>/head:refs/review-worktree/pr-<pr>
-git -C <repo> worktree add --detach <repo>/.worktrees/pr-<pr>-<slug> refs/review-worktree/pr-<pr>
+mkdir -p "$PWD/.worktrees"
+git -C <repo> worktree add --detach "$PWD/.worktrees/pr-<pr>-<slug>" refs/review-worktree/pr-<pr>
 ```
 
 ## Cleanup Guidance
