@@ -45,7 +45,14 @@ Use `gh` CLI to create a pull request from the current repository while preservi
    - If the branch is not pushed, either ask before pushing or run an explicit user-requested push such as `git push -u origin HEAD`; then retry PR creation.
 7. Prepare the title and body:
    - Derive a concise title from the branch, commits, or user request.
-   - By default, write a concise body that summarizes the change and any reviewer-critical context or risk.
+   - By default, write a reviewer-useful body, not just a terse commit summary.
+   - When no repository PR template dictates the format, use the default PR body template below for non-trivial bug fixes and features.
+   - Include enough background for the change type:
+     - For bug fixes, describe the observed behavior, expected behavior, and root cause or failure mode when it can be inferred from the diff, commits, linked issue, or user request.
+     - For features, describe the user need, product or technical context, and the capability being added.
+     - For refactors, chores, and docs-only changes, keep the background brief but still state why the change is being made when that is knowable.
+   - Describe the actual change in concrete terms, including notable behavior, API, config, data, migration, compatibility, or rollout impacts.
+   - Call out reviewer-critical risks, edge cases, follow-up work, or intentional non-goals when they matter; omit sections that would only add noise.
    - Do not add a `Verification`, `Tests`, or `Checks` section by default. Include verification only when the user asks, the repository template requires it, or a failing/skipped check materially changes reviewer risk.
    - Use an existing PR template if it exists and is relevant; fill required sections rather than leaving placeholders. Keep template-required verification/test sections minimal and factual.
    - Use `--body-file <file>` for multiline bodies. A temporary file under `/tmp` is acceptable.
@@ -65,6 +72,37 @@ Use `gh` CLI to create a pull request from the current repository while preservi
    - Run with the resolved auth mode: `gh pr view --json number,url,title,state,isDraft,baseRefName,headRefName`
    - Report the PR URL, base/head, draft status, and confirmation command.
 
+## Default PR Body Template
+
+Use this fallback body when the repository has no PR template, or when the repository template is irrelevant. Replace the guidance with concrete content; do not leave placeholders, examples, or empty sections in the final PR body.
+
+```markdown
+## Background
+
+Explain why this change exists.
+
+For bug fixes: describe the observed behavior, expected behavior, and likely cause.
+For features: describe the user need or product/technical context.
+
+## Changes
+
+- Describe the concrete implementation changes.
+- Mention behavior, API, config, migration, compatibility, or rollout impact when relevant.
+
+## Risks / Notes
+
+- Call out edge cases, rollout concerns, intentional non-goals, or follow-up work.
+- Use `None` only when there is genuinely nothing reviewer-relevant.
+
+## Links
+
+Refs #123
+```
+
+- Keep docs-only, chore-only, and other tiny PRs shorter when appropriate, but still state `Background` and `Changes` unless the repository template says otherwise.
+- Omit `Links` when there is no safe public issue, PR, discussion, spec, or ticket reference to include.
+- Do not add a verification section to this fallback template unless the workflow rules above require it.
+
 ## Guardrails
 
 - Use `gh` CLI for GitHub PR operations; do not switch to browser or raw API workflows unless the user asks.
@@ -74,6 +112,7 @@ Use `gh` CLI to create a pull request from the current repository while preservi
 - Do not create duplicate PRs for the same head branch.
 - Do not let `gh pr create` prompt for title/body, fork choice, or push target; pass explicit flags.
 - Do not create a PR before reviewing the final title and body for secrets, private issue content, internal URLs, local paths, account identifiers, and other sensitive information.
+- Do not submit PR bodies that only say "summary" or repeat commit titles when bug/feature background is available from local context.
 - Do not include verification/test output in the PR body by default. Keep it out unless the user asks, the repository template requires it, or omitted/failing checks materially affect reviewer risk.
 - Do not use `gh auth switch` to change the active account. Use `gh-auth-profile` when repository-specific credentials are needed.
 - Do not add reviewers, labels, projects, milestones, or assignees unless the user asks or the repository convention is already clear.
