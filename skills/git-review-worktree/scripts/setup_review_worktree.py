@@ -17,6 +17,9 @@ class ReviewSetupError(RuntimeError):
     pass
 
 
+WORKTREE_ROOT_ENV = "GIT_REVIEW_WORKTREE_ROOT"
+
+
 def run(
     cmd: Sequence[str],
     *,
@@ -192,9 +195,20 @@ def remote_url(repo: Path, remote: str, *, dry_run: bool) -> str:
     return run(["git", "-C", str(repo), "remote", "get-url", remote])
 
 
-def default_worktree_base(args: argparse.Namespace) -> Path:
-    root = Path(args.worktree_root).expanduser().resolve() if args.worktree_root else Path.cwd().resolve()
-    return root / ".worktrees"
+def resolve_worktree_root(args: argparse.Namespace) -> tuple[Path, str]:
+    if args.worktree_root:
+        return Path(args.worktree_root).expanduser().resolve(), "--worktree-root"
+
+    env_root = os.environ.get(WORKTREE_ROOT_ENV)
+    if env_root:
+        return Path(env_root).expanduser().resolve(), WORKTREE_ROOT_ENV
+
+    return Path.cwd().resolve(), "cwd"
+
+
+def default_worktree_base(args: argparse.Namespace) -> tuple[Path, Path, str]:
+    root, source = resolve_worktree_root(args)
+    return root / ".worktrees", root, source
 
 
 def add_worktree(repo: Path, target: str, path: Path, *, dry_run: bool) -> None:
@@ -207,7 +221,7 @@ def setup_ref(args: argparse.Namespace) -> dict[str, str]:
     repo = infer_repo_path(args.repo_path, dry_run=args.dry_run)
     sha = resolve_ref(repo, args.ref, dry_run=args.dry_run)
     short_sha = sha[:12] if sha != "DRYRUN" else "dryrun"
-    worktree_base = default_worktree_base(args)
+    worktree_base, worktree_root, worktree_root_source = default_worktree_base(args)
     worktree_path = (
         Path(args.worktree_path).expanduser().resolve()
         if args.worktree_path
@@ -222,7 +236,8 @@ def setup_ref(args: argparse.Namespace) -> dict[str, str]:
         "repo": str(repo),
         "ref": args.ref,
         "commit": sha,
-        "worktree_root": str(worktree_base.parent if not args.worktree_path else worktree_path.parent),
+        "worktree_root": str(worktree_root if not args.worktree_path else worktree_path.parent),
+        "worktree_root_source": "worktree_path" if args.worktree_path else worktree_root_source,
         "worktree_path": str(worktree_path),
     }
 
@@ -283,7 +298,7 @@ def setup_pr(args: argparse.Namespace) -> dict[str, object]:
     head_ref = str(pr.get("headRefName") or f"pr-{pr_number}")
     head_oid = str(pr.get("headRefOid") or "")
     short_sha = head_oid[:12] if head_oid and head_oid != "DRYRUN" else "dryrun"
-    worktree_base = default_worktree_base(args)
+    worktree_base, worktree_root, worktree_root_source = default_worktree_base(args)
     worktree_path = (
         Path(args.worktree_path).expanduser().resolve()
         if args.worktree_path
@@ -300,7 +315,8 @@ def setup_pr(args: argparse.Namespace) -> dict[str, object]:
         "remote": selected_remote,
         "pr": pr,
         "local_ref": local_ref,
-        "worktree_root": str(worktree_base.parent if not args.worktree_path else worktree_path.parent),
+        "worktree_root": str(worktree_root if not args.worktree_path else worktree_path.parent),
+        "worktree_root_source": "worktree_path" if args.worktree_path else worktree_root_source,
         "worktree_path": str(worktree_path),
     }
 
@@ -330,7 +346,10 @@ def add_common_args(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--repo-path", help="Existing local repository path. Defaults to current Git repo.")
     parser.add_argument(
         "--worktree-root",
-        help="Directory that contains the default .worktrees folder. Defaults to the current directory.",
+        help=(
+            "Directory that contains the default .worktrees folder. "
+            f"Defaults to ${WORKTREE_ROOT_ENV}, then the current directory."
+        ),
     )
     parser.add_argument("--worktree-path", help="Explicit output worktree path.")
     parser.add_argument("--dry-run", action="store_true", help="Print commands without making changes.")
