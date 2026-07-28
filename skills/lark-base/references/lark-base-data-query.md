@@ -1,9 +1,9 @@
 
-# base +data-query
+# Base data-query DSL SSOT
 
-> **前置条件：** 先阅读 [`../lark-shared/SKILL.md`](../../lark-shared/SKILL.md) 了解认证、全局参数和安全规则。
+> **入口指南**: [lark-base-data-query-guide.md](lark-base-data-query-guide.md) | **前置条件**: 先阅读 [`../lark-shared/SKILL.md`](../../lark-shared/SKILL.md) 了解认证、全局参数和安全规则。
 
-对多维表格数据进行聚合查询（分组、过滤、排序、聚合计算），基于以下语法的 JSON DSL：
+本文档是 `+data-query` JSON DSL 的单一事实来源（SSOT），用于说明完整字段、操作符、限制、返回和错误恢复。常用 fewshot 与命令选择先读 [lark-base-data-query-guide.md](lark-base-data-query-guide.md)。
 
 查询类任务还必须先遵守 [`lark-base-data-analysis-sop.md`](lark-base-data-analysis-sop.md)。`+data-query` 适合让筛选、分组、聚合、排序和 TopN 在 Base 云端查询服务中执行；不要用默认分页的 `+record-list` 或本地 `jq` 替代聚合查询。
 
@@ -54,7 +54,7 @@ lark-cli base +data-query \
     "shaper": {"format": "flat"}
   }'
 
-# 聚合后如需读取明细，先让 data-query 返回可回查的业务 key
+# 聚合或维度查询后如需读取逐条记录，先让 data-query 返回可回查的业务 key
 lark-cli base +data-query \
   --base-token MAGObxxxxx \
   --dsl '{
@@ -347,28 +347,30 @@ value 使用预定义关键字机制，第一个元素为字符串常量名称�
 |------|------|------|------|
 | `format` | string | 是 | 固定为 `"flat"`，表示返回扁平化的对象数组 |
 
-## API 出参详情
+## CLI 出参详情
+
+CLI 输出标准信封 `{ok, identity, data}`（失败时为 `{ok:false, identity, error}`）。
 
 **成功时：**
 
 ```json
-{"code": 0, "data": {"main_data": [{"dim_city": {"value": "北京"}, "total_amount": {"value": 12345.00}}, ...]}, "msg": ""}
+{"ok": true, "identity": "user", "data": {"main_data": [{"dim_city": {"value": "北京"}, "total_amount": {"value": 12345.00}}, ...]}}
 ```
 
 **失败时：**
 
 ```json
-{"code": 800004006, "data": {"error": {"code": 800004006, ...}}, "msg": "DSL validation failed"}
+{"ok": false, "identity": "user", "error": {"type": "api", "subtype": "unknown", "code": 800004006, "message": "...does not exist in table schema", "hint": "...", "log_id": "..."}}
 ```
 
 **Response 字段：**
 
 | 字段 | 类型 | 说明 |
 |------|------|------|
-| `code` | int | 状态码，0 为成功 |
-| `msg` | string | 错误信息 |
-| `data.main_data` | []object | 查询结果数组，每个元素为一行数据 |
-| `data.error` | object | 失败时的错误详情 |
+| `ok` | bool | 是否成功 |
+| `identity` | string | 执行身份：`user` / `bot` |
+| `data.main_data` | []object | 查询结果数组，每个元素为一行数据（成功时） |
+| `error` | object | 失败时的 typed 错误，含 `type` / `subtype` / `code` / `message` / `hint` / `log_id` |
 
 每行数据的字段值封装在 CellValue 中：
 
@@ -419,16 +421,16 @@ value 使用预定义关键字机制，第一个元素为字符串常量名称�
 
 ## 与记录读取组合
 
-`+data-query` 不返回原始记录或 link 字段明细。需要输出聚合结果对应的原始记录字段、展示值或关联表字段时，按以下方式组合：
+`+data-query` 可返回聚合结果，也可在只传 `dimensions` 时返回维度字段行；这些维度行按字段组合去重，不包含 `record_id`，不能等同于逐条原始记录。需要输出聚合结果对应的原始记录字段、展示值、记录定位信息或关联表字段时，按以下方式组合：
 
-1. 用 `+data-query` 在 Base 云端查询服务中完成全局筛选、分组、聚合、排序和 TopN，得到业务 key、分组值或候选范围。
-2. 如果已经拿到候选记录的 `record_id`，用 `+record-get` 读取明细字段。
-3. 如果拿到的是结构化业务 key（例如编号、状态、日期、金额等），优先创建临时视图做精确过滤后再 `+record-list --view-id` 读取；不要用 `+record-search` 代替结构化条件。
+1. 用 `+data-query` 在 Base 云端查询服务中完成全局筛选、分组、聚合、排序和 TopN，得到业务 key、分组值或候选字段组合。
+2. 如果已经拿到候选记录的 `record_id`，用 `+record-get` 读取逐条记录字段。
+3. 如果拿到的是结构化业务 key（例如编号、状态、日期、金额等），用 `+record-list --filter-json` 做精确过滤后读取；不要用 `+record-search` 代替结构化条件。
 4. 只有候选条件本身是文本展示值关键词时，才使用 `+record-search`，并用 `search_fields` 限定范围、`select_fields` 做投影。
 5. 若候选记录包含 link 字段，提取关联 `record_id` 后到关联表用 `+record-get` 批量读取展示字段。
 6. 最终回答业务字段，不要把内部 `record_id` 当作用户可读答案。
 
-不要把 `data-query pagination.limit` 理解为分页扫描；它只限制 Base 云端查询服务返回的聚合结果行数，不支持 offset。需要全量明细导出时回到 data analysis SOP 的 record 分页规则。
+不要把 `data-query pagination.limit` 理解为分页扫描；它只限制 Base 云端查询服务返回的聚合结果行数，不支持 offset。需要全量原始记录导出时回到 data analysis SOP 的 `+record-list` 分页规则。
 
 ## 坑点
 
@@ -447,6 +449,6 @@ value 使用预定义关键字机制，第一个元素为字符串常量名称�
 
 - [lark-base](../SKILL.md) — 多维表格全部命令
 - [lark-shared](../../lark-shared/SKILL.md) — 认证和全局参数
-- [lark-base-data-analysis-sop.md](lark-base-data-analysis-sop.md) — 查询范围、选路、下推、分页、record 明细回查和关系查询 SOP
+- [lark-base-data-analysis-sop.md](lark-base-data-analysis-sop.md) — 查询范围、选路、下推、分页、`+record-list` / `+record-search` 回查和关系查询 SOP
 - [lark-base-cell-value.md](lark-base-cell-value.md) — CellValue 格式规范
-- [lark-base-shortcut-field-properties.md](lark-base-shortcut-field-properties.md) — shortcut 字段类型与 JSON 结构
+- [lark-base-field-json.md](lark-base-field-json.md) — 字段类型与 JSON 结构
