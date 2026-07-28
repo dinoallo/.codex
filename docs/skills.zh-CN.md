@@ -30,7 +30,7 @@ skill 的执行指令继续放在 `SKILL.md` 或 `references/` 中。
 | GitHub CLI | `gh-auth-profile`, `gh-create-pr`, `gh-edit-pr`, `github-actions-debugger` |
 | 文档和仓库写作 | `write-readmes`, `write-github-actions-workflows`, `write-cluster-image` |
 | Skill 维护 | `third-party-skill-vendor` |
-| 基础设施和运维 | `infra`, `sealos-install`, `codex-token-usage-dashboard` |
+| 基础设施和运维 | `infra`, `sealos-install` |
 | Lark 集成 | 目标机器上存在时使用 `lark-*` skills |
 
 发布 fork 或公开副本之前，先检查 private 或公司专用 skills，移除不应该分享的
