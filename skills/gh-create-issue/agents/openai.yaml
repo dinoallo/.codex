@@ -1,0 +1,4 @@
+interface:
+  display_name: "GH Create Issue"
+  short_description: "Create GitHub issues with gh CLI"
+  default_prompt: "Use $gh-create-issue to file a GitHub issue for the current repository with gh CLI."

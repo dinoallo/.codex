@@ -1,0 +1,4 @@
+interface:
+  display_name: "GH Edit Issue"
+  short_description: "Edit existing GitHub issues with gh CLI"
+  default_prompt: "Use $gh-edit-issue to update an existing GitHub issue with gh CLI."
