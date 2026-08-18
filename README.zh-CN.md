@@ -106,6 +106,15 @@ vendor 的文件是否仍匹配 lock。脚本默认拒绝覆盖目标目录里�
 - infra skill 的 stack 密钥和生成产物应保留在已忽略的文件中，例如 `tf.vars`、`.terraform/`、`.artifacts/` 和 Terraform state。
 - 新增需要长期维护的区域时，先更新 `.gitignore`，确保目标文件可跟踪，同时私有文件仍被忽略。
 
+### 代码仓库 Worktree
+
+处理本地 Git 代码仓库时，Codex 会先在当前启动目录下创建独立的分支
+worktree，例如：`./.worktrees/codex-<repo>-<timestamp>-<pid>`。
+
+后续所有代码读取、编辑、测试和构建都在这个 worktree 中进行，不会自动
+修改主工作树。主工作树已有的未提交改动会原样保留，也不会自动复制到新
+worktree。worktree 不会自动删除，任务结束时会报告其路径和分支。
+
 ## 快速检查
 
 ```bash

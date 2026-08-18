@@ -109,6 +109,17 @@ provided.
 - Keep infra skill stack secrets and generated artifacts in ignored files such as `tf.vars`, `.terraform/`, `.artifacts/`, and Terraform state.
 - When adding a new maintained area, update `.gitignore` first so the intended files are trackable and the private files stay ignored.
 
+### Code Repository Worktrees
+
+For local Git repository work, Codex first creates a dedicated branch worktree
+under the current invocation directory:
+`./.worktrees/codex-<repo>-<timestamp>-<pid>`.
+
+All source reads, edits, tests, and builds happen in that worktree. The primary
+worktree is never edited automatically. Existing uncommitted changes remain in
+the primary worktree and are not copied into the new worktree. Worktrees are not
+removed automatically; their path and branch are reported when the task ends.
+
 ## Quick Checks
 
 ```bash

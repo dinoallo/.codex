@@ -1,6 +1,6 @@
 # Global Agent Guidelines
 
-These instructions apply to work under `~/.codex` unless a deeper `AGENTS.md` provides more specific rules. When multiple `AGENTS.md` files apply, prefer the most specific one for that subtree and treat this file as the default baseline.
+These are the personal global working rules for Codex. When multiple `AGENTS.md` files apply, prefer the most specific one for that subtree and treat this file as the default baseline.
 
 ## Communication
 
@@ -20,6 +20,36 @@ These instructions apply to work under `~/.codex` unless a deeper `AGENTS.md` pr
 - Prefer small, targeted changes that solve the requested problem without unrelated cleanup.
 - Ask questions only when a risky assumption cannot be validated from local context.
 - For reviews, prioritize bugs, regressions, edge cases, and missing tests over style commentary.
+
+## Repository Worktree Isolation
+
+When working in a local Git repository, isolate every code-repository session in a
+dedicated worktree before reading source files, editing files, running tests, or
+building the project. The only exception is when the current directory is already
+inside a linked worktree; reuse that worktree instead of creating a nested one.
+
+- Capture the original invocation directory before changing directories:
+  `work_root="$(pwd -P)"`.
+- Confirm the current directory is inside a Git work tree with
+  `git rev-parse --show-toplevel`. If it is not, do not clone or guess a
+  repository automatically.
+- Inspect the original repository state before creating the worktree. If the
+  primary worktree has uncommitted changes, preserve them in place, do not stash
+  or copy them, and clearly report that they will not be included.
+- Create the worktree below the original invocation directory:
+  `"$work_root/.worktrees/codex-<repo-slug>-<timestamp>-<pid>"`.
+- Create a new branch from the current `HEAD`, using a matching unique name such
+  as `codex/<repo-slug>-<timestamp>-<pid>`:
+  `git -C <repo> worktree add -b <branch> <worktree-path> HEAD`.
+- Add `.worktrees/` to the repository's `.git/info/exclude` when possible; do
+  not modify the project's `.gitignore`.
+- After creation, use the new worktree as the working directory for all source
+  reads, searches, edits, tests, builds, and normal Git commands. Use explicit
+  `git -C <original-repo>` only when inspecting the untouched primary worktree.
+- Do not remove the worktree automatically. Report its absolute path, branch,
+  source commit, and remaining status in the final response.
+- If worktree creation fails, stop before touching source files and report the
+  failing command and the required user action.
 
 ## Editing Rules
 
