@@ -18,6 +18,48 @@ Use per-repository auth profiles for `gh` CLI commands without mutating the user
 - Use the selected profile for every `gh` command in the workflow, including `gh auth status`, `gh repo view`, `gh pr`, `gh run`, and `gh api`.
 - Stop on auth, scope, SSO, org policy, repo role, or branch protection failures and report the required user action.
 
+## TOML Parsing Requirements
+
+- Always parse `gh-auth-profiles.toml` with a real TOML parser. With Python 3.11+, use the standard-library `tomllib`; use `tomli` only when necessary.
+- Never extract TOML values with `grep`, `sed`, `awk`, `cut`, regular expressions, or ad-hoc string replacement.
+- Never manually replace `\"` with `"`. TOML decoding must be performed by the parser.
+- The value passed to the shell must be the TOML-decoded `token_command`, not the raw source text from the TOML file. For example, the source text `\"token\"` must become `["token"]` before the command is executed.
+- If TOML parsing fails or a parser is unavailable, stop before running any GitHub command.
+- Keep the decoded command in a local variable and do not print it unless needed for a local diagnostic. Never print the token or token-provider stdout.
+
+Use this canonical extraction pattern instead of line-oriented parsing:
+
+```bash
+PROFILE_FILE="${CODEX_HOME:-$HOME/.codex}/private/gh-auth-profiles.toml"
+
+TOKEN_COMMAND="$(
+  python3 - "$PROFILE_FILE" "$PROFILE_NAME" <<'PY'
+import sys
+import tomllib
+
+path, profile_name = sys.argv[1], sys.argv[2]
+
+with open(path, "rb") as f:
+    config = tomllib.load(f)
+
+profile = config.get("profiles", {}).get(profile_name)
+if not isinstance(profile, dict):
+    raise SystemExit("profile not found")
+
+command = profile.get("token_command")
+if not isinstance(command, str) or not command.strip():
+    raise SystemExit("token_command is missing or invalid")
+
+sys.stdout.write(command)
+PY
+)" || {
+  printf '%s\n' "Failed to parse GitHub auth profile; GitHub was not contacted." >&2
+  exit 1
+}
+```
+
+Do not fall back to raw text extraction if `python3` or a TOML parser is unavailable.
+
 ## First Use
 
 If `${CODEX_HOME:-$HOME/.codex}/private/gh-auth-profiles.toml` does not exist, or no rule matches the target repository, stop before running mutating GitHub commands and show a minimal setup prompt:
@@ -139,7 +181,7 @@ If resolving the repo itself requires auth and no profile is configured, use the
 
 ## Run Commands
 
-Run each `gh` command with token environment variables for one process only. Substitute the selected profile's `token_command` directly:
+Run each `gh` command with token environment variables for one process only. Substitute the selected profile's **TOML-decoded** `token_command` value directly; never substitute the raw source line:
 
 ```bash
 GH_TOKEN="$(sops decrypt --extract '["token"]' "$HOME/.codex/private/github-work-fgpat.sops.yaml")" gh repo view --json nameWithOwner,url
@@ -153,7 +195,7 @@ GH_HOST="github.example.com" GH_ENTERPRISE_TOKEN="$(sops decrypt --extract '["to
 
 Use `GH_TOKEN` for `github.com` and `ghe.com` subdomains. Use `GH_ENTERPRISE_TOKEN` for GitHub Enterprise Server hosts.
 
-Before mutating operations, verify the selected profile with a read-only command under the same environment:
+Before mutating operations, verify the selected profile with a read-only command under the same environment. First ensure the token provider itself succeeds and returns a non-empty value; if parsing or token retrieval fails, report that GitHub was not contacted rather than reporting a GitHub permission failure:
 
 ```bash
 GH_TOKEN="$(sops decrypt --extract '["token"]' "$HOME/.codex/private/github-work-fgpat.sops.yaml")" gh auth status
@@ -167,9 +209,12 @@ Do not enable shell tracing. Do not print, log, cache, or include the token valu
 When a profiled `gh` command fails, report:
 
 - the profile name and target repository, without the token command output;
+- whether the failure occurred during TOML parsing, token retrieval, GitHub authentication, or the requested GitHub operation;
 - the command that failed, redacted if needed;
 - the likely missing capability, such as repo access, `repo` scope, `read:org`, `workflow`, `project`, SAML SSO authorization, organization approval, team visibility, or GitHub App installation access;
 - the next action for the user, such as updating the profile rule, granting the token repository access, authorizing SSO, installing the GitHub App on the repo, or refreshing scopes.
+
+If TOML parsing or the token provider fails, explicitly say that GitHub was not contacted. Only report a GitHub auth or permission failure after a profiled `gh` command actually ran.
 
 Do not run `gh auth refresh`, `gh auth switch`, `gh auth login`, or a different profile unless the user explicitly asks.
 
