@@ -37,12 +37,6 @@
       "ref": "main",
       "commit": "0a2c3202cb3d71c6d5f914e6fcc13fa6a30037cd"
     },
-    "sealos-install": {
-      "repo": "git@github.com:labring/sealos-pro.git",
-      "path": "skills/sealos-install",
-      "ref": "main",
-      "commit": "7f9e8edc9ee9714573baaaea37a1b4a7337bdf11"
-    },
     "write-cluster-image": {
       "repo": "labring-sigs/write-cluster-image-skill",
       "path": ".",

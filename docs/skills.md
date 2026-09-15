@@ -33,7 +33,7 @@ The current maintained areas are:
 | GitHub CLI | `gh-auth-profile`, `gh-create-pr`, `gh-edit-pr`, `github-actions-debugger` |
 | Documentation and repo writing | `write-readmes`, `write-github-actions-workflows`, `write-cluster-image` |
 | Skill maintenance | `third-party-skill-vendor` |
-| Infrastructure and operations | `infra`, `sealos-install` |
+| Infrastructure and operations | `infra` |
 | Lark integrations | `lark-*` skills, when present on the target machine |
 
 Before publishing a fork or public copy, review any private or company-specific
