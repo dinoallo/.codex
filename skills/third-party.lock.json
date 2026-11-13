@@ -37,6 +37,12 @@
       "ref": "main",
       "commit": "0a2c3202cb3d71c6d5f914e6fcc13fa6a30037cd"
     },
+    "security-audit": {
+      "repo": "cloudflare/security-audit-skill",
+      "path": "skills/security-audit",
+      "ref": "main",
+      "commit": "c1c8a8c1471069fb0e188eeaff69b8e8db6564a8"
+    },
     "write-cluster-image": {
       "repo": "labring-sigs/write-cluster-image-skill",
       "path": ".",

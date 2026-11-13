@@ -14,7 +14,6 @@
 # dest = "skills/example"
 
 [[skill]]
-[[skill]]
 name = "lark-shared"
 repo = "git@github.com:larksuite/cli.git"
 path = "skills/lark-shared"
@@ -62,3 +61,10 @@ repo = "labring-sigs/write-cluster-image-skill"
 path = "."
 ref = "main"
 dest = "skills/write-cluster-image"
+
+[[skill]]
+name = "security-audit"
+repo = "cloudflare/security-audit-skill"
+path = "skills/security-audit"
+ref = "main"
+dest = "skills/security-audit"
